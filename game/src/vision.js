@@ -1,0 +1,42 @@
+// vision.js — what a guard can see: vision cones, line of sight, and how
+// fast suspicion grows when the player is caught in the open.
+
+import { lightAt, losClear, isPlantAt } from './level.js';
+
+export const CONE_RANGE = 175;
+export const CONE_HALF_ANGLE = 0.62; // ~35 degrees each side
+
+// Is the point (px, py) inside the guard's vision cone with a clear sight line?
+export function inVisionCone(guard, px, py) {
+  const dx = px - guard.x;
+  const dy = py - guard.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist > CONE_RANGE || dist < 1) return dist < 1;
+  const ang = Math.atan2(dy, dx);
+  let diff = ang - guard.angle;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  if (Math.abs(diff) > CONE_HALF_ANGLE) return false;
+  return losClear(guard.x, guard.y, px, py);
+}
+
+// Suspicion points per second while the player is visible.
+// Closer is worse; lamplight is worse; sneaking and plants help a lot.
+export function detectionRate(guard, player) {
+  const dx = player.x - guard.x;
+  const dy = player.y - guard.y;
+  const dist = Math.hypot(dx, dy);
+  const closeness = 1 - dist / (CONE_RANGE + 30);
+  let rate = 16 + 52 * Math.max(0, closeness);
+  const light = lightAt(player.x, player.y);
+  rate *= 1 + 0.7 * light;
+  if (player.stance === 'sneak') rate *= 0.55;
+  if (player.stance === 'run') rate *= 1.35;
+  if (isPlantAt(player.x, player.y)) rate *= 0.22;
+  return rate;
+}
+
+// How clearly the guard can hear a noise pulse of the given radius.
+export function hearsNoise(guard, nx, ny, radius) {
+  return Math.hypot(guard.x - nx, guard.y - ny) <= radius;
+}
