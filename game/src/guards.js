@@ -144,7 +144,7 @@ export class Guard {
   }
 }
 
-// The three guards of the Merrow Museum, each with its own loop and temper.
+// The six guards of the Merrow Museum, each with its own loop and temper.
 export function makeGuards() {
   return [
     new Guard({
@@ -153,9 +153,24 @@ export function makeGuards() {
       speed: 1.6, pause: 2.0,
     }),
     new Guard({
+      name: 'Ivo',
+      route: [[9, 1], [21, 1]],
+      speed: 1.3, pause: 2.5,
+    }),
+    new Guard({
       name: 'Pell',
       route: [[10, 8], [20, 8], [20, 12], [10, 12]],
       speed: 1.1, pause: 3.0,
+    }),
+    new Guard({
+      name: 'Sable',
+      route: [[11, 10], [19, 10]],
+      speed: 1.5, pause: 1.5,
+    }),
+    new Guard({
+      name: 'Bram',
+      route: [[9, 16], [21, 16], [21, 18], [9, 18]],
+      speed: 1.4, pause: 2.0,
     }),
     new Guard({
       name: 'Odo',

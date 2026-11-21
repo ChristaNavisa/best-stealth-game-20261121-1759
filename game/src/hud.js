@@ -1,7 +1,7 @@
 // hud.js — the heads-up display: objective line, detection meter, timer,
 // pebble count, and the minimap that shows guards, the bell and the exit.
 
-import { COLS, ROWS, TILE, grid, T_FLOOR, bellSpot, exitSpot } from './level.js';
+import { COLS, ROWS, TILE, grid, T_FLOOR, bellSpot, vaultSpot, exitSpot } from './level.js';
 
 export class Hud {
   constructor() {
@@ -18,16 +18,18 @@ export class Hud {
     const player = game.player;
     this.objective.textContent = player.hasBell
       ? 'Bell stolen — reach the east exit unseen!'
-      : 'Steal the Sunken Bell from the central gallery.';
+      : 'Steal the Sunken Bell — 6 guards, 3 cameras, 8 treasures.';
     const worst = Math.max(0, ...game.guards.map((g) => g.suspicion));
     const pct = Math.min(100, Math.round(worst));
     this.meterFill.style.width = `${pct}%`;
     const stage = worst >= 70 ? 'ALERTED' : worst >= 30 ? 'SUSPICIOUS' : 'UNSEEN';
     this.meterFill.style.background = worst >= 70 ? '#e5484d' : worst >= 30 ? '#f5a524' : '#46a758';
-    this.meterLabel.textContent = `Detection ${pct}% — ${stage}`;
+    this.meterLabel.textContent = game.lockdownT > 0
+      ? `LOCKDOWN ${Math.ceil(game.lockdownT)}s — every guard is hunting!`
+      : `Detection ${pct}% — ${stage}`;
     const t = Math.floor(game.elapsed);
     this.timer.textContent = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-    this.pebbles.textContent = `Pebbles ${player.pebbles} · Coins ${player.coins}/3`;
+    this.pebbles.textContent = `Pebbles ${player.pebbles} · Lures ${player.lures} · Coins ${player.coins}/8`;
     this.drawMinimap(game);
   }
 
@@ -55,6 +57,19 @@ export class Hud {
       ctx.beginPath();
       ctx.arc(bellSpot.x * sx, bellSpot.y * sy, 4, 0, Math.PI * 2);
       ctx.fill();
+    }
+    // The Tide Vault (gold diamond) and the cameras (red squares).
+    if (!game.player.hasVault) {
+      ctx.fillStyle = '#ffd700';
+      ctx.save();
+      ctx.translate(vaultSpot.x * sx, vaultSpot.y * sy);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-3, -3, 6, 6);
+      ctx.restore();
+    }
+    for (const camera of game.cameras) {
+      ctx.fillStyle = camera.cooldown > 0 ? '#39415a' : '#ff5252';
+      ctx.fillRect((camera.x - 4) * sx, (camera.y - 4) * sy, 8 * sx, 8 * sy);
     }
     for (const coin of game.player.coinsLeft) {
       if (coin.taken) continue;

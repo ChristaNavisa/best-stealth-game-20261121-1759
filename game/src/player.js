@@ -1,7 +1,7 @@
 // player.js — Wren, the burglar: walk, sneak, run, throw pebbles, and grab
 // the Sunken Bell. Running is fast but loud; sneaking is slow and quiet.
 
-import { TILE, circleHitsSolid, bellSpot, exitSpot, coins } from './level.js';
+import { TILE, circleHitsSolid, bellSpot, vaultSpot, exitSpot, coins } from './level.js';
 
 const WALK_SPEED = 2.6 * TILE;
 const SNEAK_SPEED = 1.5 * TILE;
@@ -15,8 +15,10 @@ export class Player {
     this.angle = 0; // facing, for the cloak's direction
     this.stance = 'walk'; // walk | sneak | run
     this.hasBell = false;
+    this.hasVault = false; // the Tide Vault's golden idol, optional loot
     this.coins = 0;
     this.pebbles = 5;
+    this.lures = 3; // brass coins to throw: they clatter and pull guards over
     this.stepTimer = 0;
     this.moving = false;
     this._coinsLeft = coins.map((c) => ({ ...c, taken: false }));
@@ -75,10 +77,31 @@ export class Player {
     return true;
   }
 
+  // Throw a brass coin toward a point: it lands with a bright clatter
+  // that pulls guards over to investigate — a lure you can spend, where
+  // a pebble only distracts. Returns false with no lures left.
+  throwCoin(tx, ty, events) {
+    if (this.lures <= 0) return false;
+    this.lures -= 1;
+    const dx = tx - this.x;
+    const dy = ty - this.y;
+    const dist = Math.hypot(dx, dy);
+    const range = Math.min(dist, 260);
+    const lx = this.x + (dx / (dist || 1)) * range;
+    const ly = this.y + (dy / (dist || 1)) * range;
+    events.push({ type: 'coinToss', x: lx, y: ly });
+    events.push({ type: 'noise', x: lx, y: ly, radius: 170, loud: true });
+    return true;
+  }
+
   pickups(events) {
     if (!this.hasBell && Math.hypot(this.x - bellSpot.x, this.y - bellSpot.y) < 26) {
       this.hasBell = true;
       events.push({ type: 'bell' });
+    }
+    if (!this.hasVault && Math.hypot(this.x - vaultSpot.x, this.y - vaultSpot.y) < 26) {
+      this.hasVault = true;
+      events.push({ type: 'vault' });
     }
     for (const coin of this._coinsLeft) {
       if (!coin.taken && Math.hypot(this.x - coin.x, this.y - coin.y) < 22) {

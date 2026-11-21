@@ -4,9 +4,10 @@
 
 import {
   TILE, COLS, ROWS, grid, T_WALL, T_CRATE, T_CASE,
-  lamps, plants, bellSpot, exitSpot,
+  lamps, plants, bellSpot, vaultSpot, exitSpot,
 } from './level.js';
 import { CONE_RANGE, CONE_HALF_ANGLE } from './vision.js';
+import { CAM_RANGE, CAM_HALF_ANGLE } from './cameras.js';
 
 const FLOOR_A = '#2a2f3a';
 const FLOOR_B = '#262b34';
@@ -18,6 +19,19 @@ export function drawWorld(ctx, game) {
   drawCones(ctx, game);
   drawEntities(ctx, game);
   drawPulses(ctx, game);
+  if (game.lockdownT > 0) drawLockdownFrame(ctx, game);
+}
+
+// A red frame while the lockdown runs: the whole museum is hunting you.
+function drawLockdownFrame(ctx, game) {
+  const blink = 0.25 + 0.2 * Math.sin(game.elapsed * 10);
+  ctx.strokeStyle = `rgba(229, 72, 77, ${blink})`;
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, COLS * TILE - 6, ROWS * TILE - 6);
+  ctx.fillStyle = `rgba(229, 72, 77, ${blink + 0.35})`;
+  ctx.font = 'bold 15px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`LOCKDOWN — ${Math.ceil(game.lockdownT)}s`, COLS * TILE / 2, 24);
 }
 
 function drawFloor(ctx) {
@@ -124,6 +138,26 @@ function drawProps(ctx, game) {
     ctx.fill();
     ctx.fillRect(bell.x - 11, bell.y - 4, 22, 3);
   }
+  // The Tide Vault in the south gallery: a second pedestal with a golden idol.
+  const vault = vaultSpot;
+  ctx.fillStyle = '#5b5344';
+  ctx.fillRect(vault.x - 13, vault.y - 10, 26, 20);
+  if (!game.player.hasVault) {
+    const vg = ctx.createRadialGradient(vault.x, vault.y - 4, 2, vault.x, vault.y - 4, 22);
+    vg.addColorStop(0, 'rgba(255, 215, 120, 0.85)');
+    vg.addColorStop(1, 'rgba(255, 215, 120, 0)');
+    ctx.fillStyle = vg;
+    ctx.beginPath();
+    ctx.arc(vault.x, vault.y - 4, 22, 0, Math.PI * 2);
+    ctx.fill();
+    // A small golden idol: head, body, base.
+    ctx.fillStyle = '#e8b93e';
+    ctx.beginPath();
+    ctx.arc(vault.x, vault.y - 10, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(vault.x - 5, vault.y - 6, 10, 9);
+    ctx.fillRect(vault.x - 7, vault.y + 3, 14, 3);
+  }
   // The east exit: a green door in the outer wall.
   const ex = exitSpot;
   ctx.fillStyle = game.player.hasBell ? '#2f9e57' : '#3d4a3f';
@@ -197,9 +231,44 @@ function drawCones(ctx, game) {
     ctx.closePath();
     ctx.fill();
   }
+  // Security cameras sweep red cones across their galleries.
+  for (const camera of game.cameras) {
+    if (camera.cooldown > 0) continue; // tripped cameras go dark
+    const hot = camera.suspicion >= 50;
+    const color = hot ? 'rgba(245, 165, 36, 0.30)' : 'rgba(229, 72, 77, 0.22)';
+    const g = ctx.createRadialGradient(camera.x, camera.y, 8, camera.x, camera.y, CAM_RANGE);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(camera.x, camera.y);
+    ctx.arc(camera.x, camera.y, CAM_RANGE, camera.angle - CAM_HALF_ANGLE, camera.angle + CAM_HALF_ANGLE);
+    ctx.closePath();
+    ctx.fill();
+  }
 }
 
 function drawEntities(ctx, game) {
+  // Security cameras: a dark mount on the wall with a red lens that
+  // follows the sweep, and a small label so the player can name the threat.
+  for (const camera of game.cameras) {
+    const tripped = camera.cooldown > 0;
+    ctx.fillStyle = '#1d222c';
+    ctx.fillRect(camera.x - 8, camera.y - 8, 16, 16);
+    ctx.strokeStyle = tripped ? '#3a4150' : '#e5484d';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(camera.x - 8, camera.y - 8, 16, 16);
+    ctx.fillStyle = tripped ? '#39415a' : '#ff5252';
+    ctx.beginPath();
+    ctx.arc(camera.x + Math.cos(camera.angle) * 4, camera.y + Math.sin(camera.angle) * 4, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    if (!tripped) {
+      ctx.fillStyle = 'rgba(255, 82, 82, 0.9)';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(camera.name, camera.x, camera.y - 12);
+    }
+  }
   for (const guard of game.guards) {
     // Body: dark red uniform, pale helmet, facing tick.
     ctx.fillStyle = '#8c2f39';

@@ -73,7 +73,14 @@ export const tileCenter = (tx, ty) => ({ x: (tx + 0.5) * TILE, y: (ty + 0.5) * T
 export const playerStart = tileCenter(2, 10);
 export const bellSpot = tileCenter(15, 10);
 export const exitSpot = tileCenter(28, 10);
-export const coins = [tileCenter(15, 2), tileCenter(15, 17), tileCenter(26, 2)];
+// The Tide Vault: a second, optional treasure in the south gallery —
+// a golden idol on its own pedestal, worth the detour.
+export const vaultSpot = tileCenter(15, 16);
+export const coins = [
+  tileCenter(15, 2), tileCenter(15, 17), tileCenter(26, 2),
+  tileCenter(9, 2), tileCenter(21, 2), tileCenter(9, 17),
+  tileCenter(21, 17), tileCenter(26, 17),
+];
 
 export function tileAt(px, py) {
   const tx = Math.floor(px / TILE);

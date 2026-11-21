@@ -6,6 +6,7 @@
 import { TILE, COLS, ROWS, playerStart } from './level.js';
 import { Player } from './player.js';
 import { makeGuards } from './guards.js';
+import { makeCameras } from './cameras.js';
 import { Input } from './input.js';
 import { SoundBank } from './audio.js';
 import { Hud } from './hud.js';
@@ -42,8 +43,10 @@ class Game {
   reset() {
     this.player = new Player(playerStart);
     this.guards = makeGuards();
+    this.cameras = makeCameras();
     this.elapsed = 0;
     this.everAlerted = false;
+    this.lockdownT = 0; // seconds left of a camera-triggered lockdown
     this.pulses = [];
   }
 
@@ -68,7 +71,8 @@ class Game {
     const rank = !this.everAlerted ? 'GHOST — never once spotted' : 'SHADOW — seen, but never caught';
     this.showOverlay(
       `<h1>Clean getaway!</h1><p>Wren slips into the night with the Sunken Bell.</p>` +
-      `<p>Time ${mm}:${ss} · Coins ${this.player.coins}/3 · Pebbles left ${this.player.pebbles}</p>` +
+      `<p>Time ${mm}:${ss} · Coins ${this.player.coins}/8 · Lures left ${this.player.lures} · ` +
+      `Tide Vault ${this.player.hasVault ? 'looted' : 'untouched'}</p>` +
       `<p><b>${rank}</b></p><p>Press R to play again.</p>`,
     );
   }
@@ -100,14 +104,25 @@ class Game {
 
   step(dt) {
     this.elapsed += dt;
+    if (this.lockdownT > 0) this.lockdownT = Math.max(0, this.lockdownT - dt);
     const events = [];
     const click = this.input.takeClick();
     if (click && this.player.pebbles > 0) {
       this.player.throwPebble(click.x, click.y, events);
     }
+    const rclick = this.input.takeRightClick();
+    if (rclick && this.player.lures > 0) {
+      this.player.throwCoin(rclick.x, rclick.y, events);
+    }
+    if (this.input.takeCoinKey() && this.player.lures > 0) {
+      this.player.throwCoin(this.input.mouseX, this.input.mouseY, events);
+    }
     this.player.update(dt, this.input, events);
     for (const guard of this.guards) {
       guard.update(dt, this.player, events.filter((e) => e.type === 'noise'), events);
+    }
+    for (const camera of this.cameras) {
+      camera.update(dt, this.elapsed, this.player, events);
     }
     this.handleEvents(events);
     for (const pulse of this.pulses) {
@@ -142,12 +157,28 @@ class Game {
         }
       }
       if (e.type === 'pebble') this.sounds.clatter();
+      if (e.type === 'coinToss') {
+        this.sounds.coin();
+        this.pulses.push({ x: e.x, y: e.y, r: 8, alpha: 0.85, color: 'rgba(232, 200, 90, 0.9)' });
+      }
+      if (e.type === 'lockdown') {
+        // A camera caught you: every guard hunts your position at once.
+        this.everAlerted = true;
+        this.lockdownT = 6;
+        this.sounds.alarm();
+        for (const guard of this.guards) {
+          guard.state = 'alerted';
+          guard.suspicion = 100;
+          guard.lastSeen = { x: this.player.x, y: this.player.y };
+          guard.lostTimer = 0;
+        }
+      }
       if (e.type === 'noticed') this.sounds.noticed();
       if (e.type === 'alarm') {
         this.everAlerted = true;
         this.sounds.alarm();
       }
-      if (e.type === 'coin' || e.type === 'bell') {
+      if (e.type === 'coin' || e.type === 'bell' || e.type === 'vault') {
         if (e.type === 'bell') this.sounds.bell();
         else this.sounds.pickup();
       }

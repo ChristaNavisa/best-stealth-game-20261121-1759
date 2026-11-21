@@ -11,6 +11,8 @@ export class Input {
     this.mouseX = 0;
     this.mouseY = 0;
     this.clicked = null; // {x, y} in canvas pixels, consumed once per frame
+    this.clickedRight = null; // right-click: throw a coin lure instead
+    this.coinKey = false; // X pressed: throw a coin lure at the mouse
     this.anyKey = null; // last key pressed, for menu shortcuts
     this._keys = new Set();
 
@@ -20,6 +22,7 @@ export class Input {
       }
       this._keys.add(e.code);
       this.anyKey = e.code;
+      if (e.code === 'KeyX') this.coinKey = true;
       this.refresh();
     });
     window.addEventListener('keyup', (e) => {
@@ -37,11 +40,15 @@ export class Input {
     });
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
-      this.clicked = {
+      const at = {
         x: (e.clientX - rect.left) * (canvas.width / rect.width),
         y: (e.clientY - rect.top) * (canvas.height / rect.height),
       };
+      if (e.button === 2) this.clickedRight = at;
+      else this.clicked = at;
     });
+    // Right-click is a game action, not a menu.
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   refresh() {
@@ -58,6 +65,18 @@ export class Input {
     const c = this.clicked;
     this.clicked = null;
     return c;
+  }
+
+  takeRightClick() {
+    const c = this.clickedRight;
+    this.clickedRight = null;
+    return c;
+  }
+
+  takeCoinKey() {
+    const k = this.coinKey;
+    this.coinKey = false;
+    return k;
   }
 
   takeKey() {

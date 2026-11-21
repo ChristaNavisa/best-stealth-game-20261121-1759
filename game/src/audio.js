@@ -55,6 +55,13 @@ export class SoundBank {
     this._tone(900, 0.08, 'square', 0.04, 0.06);
   }
 
+  // The brass coin lure: a bright metallic ring that draws every guard.
+  coin() {
+    this._tone(2093, 0.1, 'sine', 0.08);
+    this._tone(1568, 0.16, 'sine', 0.07, 0.07);
+    this._tone(2637, 0.08, 'sine', 0.05, 0.14);
+  }
+
   pickup() {
     this._tone(880, 0.12, 'sine', 0.09);
     this._tone(1318, 0.18, 'sine', 0.09, 0.1);
