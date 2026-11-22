@@ -17,6 +17,7 @@ export function drawWorld(ctx, game) {
   drawProps(ctx, game);
   drawLighting(ctx, game);
   drawCones(ctx, game);
+  drawLasers(ctx, game);
   drawObjectives(ctx, game);
   drawEntities(ctx, game);
   drawPulses(ctx, game);
@@ -131,6 +132,68 @@ function drawProps(ctx, game) {
         ctx.fillStyle = '#2e3748';
         ctx.fillRect(x, y, TILE, 3);
       }
+    }
+  }
+}
+
+// Laser tripwires: a burning beam is three strokes (wide glow, hot core,
+// white-hot middle) so it reads as dangerous even at thumbnail size; a
+// dark beam is a faint dashed line between two dead emitters, so the
+// player can tell at a glance that the doorway is safe to cross now.
+function drawLasers(ctx, game) {
+  if (!game.lasers) return;
+  for (const laser of game.lasers) {
+    const on = laser.isOn(game.elapsed);
+    const tripped = laser.cooldown > 0;
+    // Emitter boxes at both ends of the beam.
+    for (const [ex, ey] of [[laser.x0, laser.y0], [laser.x1, laser.y1]]) {
+      ctx.fillStyle = '#1d222c';
+      ctx.fillRect(ex - 5, ey - 5, 10, 10);
+      ctx.strokeStyle = on ? '#ff5252' : '#3a4150';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(ex - 5, ey - 5, 10, 10);
+      ctx.fillStyle = on ? '#ff5252' : '#39415a';
+      ctx.beginPath();
+      ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (on) {
+      ctx.strokeStyle = 'rgba(255, 82, 82, 0.25)';
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(laser.x0, laser.y0);
+      ctx.lineTo(laser.x1, laser.y1);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 82, 82, 0.85)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(laser.x0, laser.y0);
+      ctx.lineTo(laser.x1, laser.y1);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(laser.x0, laser.y0);
+      ctx.lineTo(laser.x1, laser.y1);
+      ctx.stroke();
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(8, 10, 18, 0.85)';
+      const mx = (laser.x0 + laser.x1) / 2;
+      const my = (laser.y0 + laser.y1) / 2;
+      ctx.strokeText('LASER', mx, my - 8);
+      ctx.fillStyle = '#ff8a8a';
+      ctx.fillText('LASER', mx, my - 8);
+    } else {
+      ctx.strokeStyle = tripped ? 'rgba(120, 130, 150, 0.4)' : 'rgba(255, 82, 82, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(laser.x0, laser.y0);
+      ctx.lineTo(laser.x1, laser.y1);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
   }
 }

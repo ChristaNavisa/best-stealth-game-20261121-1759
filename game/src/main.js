@@ -7,6 +7,7 @@ import { TILE, COLS, ROWS, playerStart } from './level.js';
 import { Player } from './player.js';
 import { makeGuards } from './guards.js';
 import { makeCameras } from './cameras.js';
+import { makeLasers } from './lasers.js';
 import { Input } from './input.js';
 import { SoundBank } from './audio.js';
 import { Hud } from './hud.js';
@@ -44,9 +45,11 @@ class Game {
     this.player = new Player(playerStart);
     this.guards = makeGuards();
     this.cameras = makeCameras();
+    this.lasers = makeLasers();
     this.elapsed = 0;
     this.everAlerted = false;
     this.lockdownT = 0; // seconds left of a camera-triggered lockdown
+    this.laserAlarmT = 0; // seconds left of a laser-trip warning
     this.pulses = [];
   }
 
@@ -105,6 +108,7 @@ class Game {
   step(dt) {
     this.elapsed += dt;
     if (this.lockdownT > 0) this.lockdownT = Math.max(0, this.lockdownT - dt);
+    if (this.laserAlarmT > 0) this.laserAlarmT = Math.max(0, this.laserAlarmT - dt);
     const events = [];
     const click = this.input.takeClick();
     if (click && this.player.pebbles > 0) {
@@ -118,6 +122,9 @@ class Game {
       this.player.throwCoin(this.input.mouseX, this.input.mouseY, events);
     }
     this.player.update(dt, this.input, events);
+    for (const laser of this.lasers) {
+      laser.update(dt, this.elapsed, this.player, events);
+    }
     for (const guard of this.guards) {
       guard.update(dt, this.player, events.filter((e) => e.type === 'noise'), events);
     }
@@ -160,6 +167,19 @@ class Game {
       if (e.type === 'coinToss') {
         this.sounds.coin();
         this.pulses.push({ x: e.x, y: e.y, r: 8, alpha: 0.85, color: 'rgba(232, 200, 90, 0.9)' });
+      }
+      if (e.type === 'laser') {
+        // A tripwire crossed while it burned: every guard grows
+        // suspicious and comes to look at the crossing — a setback, not
+        // a lockdown, so a careful burglar can still recover.
+        this.laserAlarmT = 3;
+        this.sounds.noticed();
+        this.pulses.push({ x: e.x, y: e.y, r: 8, alpha: 0.85, color: 'rgba(255, 82, 82, 0.9)' });
+        for (const guard of this.guards) {
+          guard.suspicion = Math.min(100, guard.suspicion + 40);
+          guard.lastSeen = { x: this.player.x, y: this.player.y };
+          if (guard.state === 'patrol') guard.state = 'suspicious';
+        }
       }
       if (e.type === 'lockdown') {
         // A camera caught you: every guard hunts your position at once.

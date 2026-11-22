@@ -10,15 +10,22 @@ export function applyShot(game, name) {
   const [marlow, ivo, pell, sable, bram, odo] = game.guards;
   const [camA, camB, camC] = game.cameras;
   if (name === 'cover') {
-    // The whole game at once: Wren behind a crate by the bell, cones
-    // sweeping the central gallery, a camera watching from the north wall,
-    // the exit glowing in the east wing.
-    p.x = tileCenter(12, 10).x; p.y = tileCenter(12, 10).y;
+    // The whole game at once, at its tensest second: Wren one step from
+    // the Bell, Pell's amber cone sweeping straight at her with a "?",
+    // Sable closing in, Cam A hot, Laser S and Laser E burning red across
+    // their doorways while Laser N sits dark — every system in one frame.
+    // Elapsed 47 s: Laser N off (47+0)%4=3.0, Laser S on (47+1.3)%4=0.3,
+    // Laser E on (47+2.6)%4=1.6.
+    game.elapsed = 47;
+    p.x = tileCenter(13, 10).x; p.y = tileCenter(13, 10).y;
     p.stance = 'sneak';
-    pell.x = tileCenter(16, 8).x; pell.y = tileCenter(16, 8).y;
-    pell.angle = Math.PI; pell.state = 'patrol'; pell.suspicion = 0;
-    sable.x = tileCenter(17, 10).x; sable.y = tileCenter(17, 10).y;
-    sable.angle = Math.PI; sable.state = 'patrol'; sable.suspicion = 0;
+    p.angle = 0;
+    pell.x = tileCenter(16, 9).x; pell.y = tileCenter(16, 9).y;
+    pell.angle = Math.PI; pell.state = 'suspicious'; pell.suspicion = 58;
+    pell.lastSeen = { x: p.x, y: p.y };
+    sable.x = tileCenter(17, 11).x; sable.y = tileCenter(17, 11).y;
+    sable.angle = -Math.PI * 0.75; sable.state = 'suspicious'; sable.suspicion = 34;
+    sable.lastSeen = { x: p.x, y: p.y };
     marlow.x = tileCenter(12, 4).x; marlow.y = tileCenter(12, 4).y;
     marlow.angle = 0.3; marlow.state = 'patrol'; marlow.suspicion = 0;
     ivo.x = tileCenter(18, 1).x; ivo.y = tileCenter(18, 1).y;
@@ -27,13 +34,14 @@ export function applyShot(game, name) {
     bram.angle = 0; bram.state = 'patrol'; bram.suspicion = 0;
     odo.x = tileCenter(26, 6).x; odo.y = tileCenter(26, 6).y;
     odo.angle = Math.PI / 2; odo.state = 'patrol'; odo.suspicion = 0;
-    camA.angle = Math.PI / 2 + 0.45; camA.suspicion = 0;
+    camA.angle = Math.PI / 2 + 0.45; camA.suspicion = 45;
     camB.angle = 0.4; camB.suspicion = 0;
     camC.angle = Math.PI / 2 - 0.4; camC.suspicion = 0;
   } else if (name === 'chase') {
     // A near-miss: Wren inches from Pell's cone, suspicion climbing, a
     // camera's cone already amber — the moment the detection system is
-    // built for.
+    // built for. Elapsed 63 s so the clock reads mid-heist.
+    game.elapsed = 63;
     p.x = tileCenter(14, 9).x; p.y = tileCenter(14, 9).y;
     p.stance = 'walk';
     pell.x = tileCenter(16, 9).x; pell.y = tileCenter(16, 9).y;
@@ -55,7 +63,9 @@ export function applyShot(game, name) {
     camC.angle = Math.PI / 2; camC.suspicion = 0;
   } else if (name === 'exit') {
     // Bell in hand, Wren slipping down the east wing while Odo patrols the
-    // corridor ahead and Cam B sweeps the exit approach.
+    // corridor ahead and Cam B sweeps the exit approach. Elapsed 132 s:
+    // Laser E has just gone dark (132+2.6)%4=2.6 — the escape window.
+    game.elapsed = 132;
     p.hasBell = true;
     p.coins = 2;
     p.x = tileCenter(25, 10).x; p.y = tileCenter(25, 10).y;

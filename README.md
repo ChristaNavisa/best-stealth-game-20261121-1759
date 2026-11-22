@@ -1,4 +1,4 @@
-# The Merrow Museum — Night of the Sunken Bell: 6 guards, 3 security cameras, 8 treasures, coin lures & lockdown alarm
+# Bellwether — steal the Sunken Bell: 6 guards, 3 cameras, 3 lasers, 8 treasures, coin lures & lockdown alarm
 
 [![Make the best stealth game](https://make.fun/badge/best-stealth-game-20261121-1759.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
 [![Rank](https://make.fun/badge/best-stealth-game-20261121-1759/ChristaNavisa/best-stealth-game-20261121-1759/rank.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
@@ -8,8 +8,9 @@ A top-down stealth game made for the make.fun bounty **Make the best stealth gam
 (`best-stealth-game-20261121-1759`). Midnight at the Merrow Museum: Wren the burglar
 slips in to steal the Sunken Bell — gold, older than the city — from the central
 gallery, then escapes through the east wing without ever being caught. Six guards
-walk the galleries, three security cameras sweep red cones over them, and a second
-vault in the south gallery hides the Tide Vault's golden idol for burglars who dare.
+walk the galleries, three security cameras sweep red cones over them, three laser
+tripwires blink across the doorways, and a second vault in the south gallery hides
+the Tide Vault's golden idol for burglars who dare.
 
 ## The game
 
@@ -21,6 +22,10 @@ vault in the south gallery hides the Tide Vault's golden idol for burglars who d
   gallery, the east wing and the south gallery. Linger in a cone and the camera trips
   a **lockdown**: every guard is alerted to your position at once. A tripped camera
   goes dark for 8 seconds before it resumes sweeping.
+- **Laser tripwires:** three beams guard the doorways — north gallery, south gallery,
+  and the east-wing exit itself. Each beam burns red, then goes dark, on a fixed
+  4-second cycle you can learn. Cross a live beam and every guard grows suspicious
+  and comes to look at the crossing; a tripped beam stays dark for 5 seconds.
 - **Visible vision cones:** every guard's cone is drawn on the floor. Step inside one
   and suspicion climbs; lamplight makes it climb faster, sneaking and the potted
   plants slow it down.
@@ -38,9 +43,9 @@ vault in the south gallery hides the Tide Vault's golden idol for burglars who d
 - **Lighting that shows what is safe:** warm lamp pools are dangerous ground; the
   cool shadows between them are where Wren belongs.
 - **HUD and minimap:** detection meter with UNSEEN / SUSPICIOUS / ALERTED stages and a
-  LOCKDOWN countdown, objective line, timer, pebble, lure and coin counts, and a live
-  minimap of guards, cameras, the Bell, the Tide Vault and the exit. Pause, win and
-  lose screens, instant restart.
+  LOCKDOWN countdown, laser-trip warning, objective line, timer, pebble, lure and coin
+  counts, and a live minimap of guards, cameras, lasers, the Bell, the Tide Vault and
+  the exit. Pause, win and lose screens, instant restart.
 
 ## Controls
 
@@ -62,6 +67,7 @@ vault in the south gallery hides the Tide Vault's golden idol for burglars who d
 - `game/src/level.js` — the museum floor plan (walls, cover, lamps, objectives)
 - `game/src/guards.js` — guard brains: patrol, suspicion, investigation, chase
 - `game/src/cameras.js` — security cameras: sweeping cones, suspicion, lockdown
+- `game/src/lasers.js` — laser tripwires: fixed blink cycle, crossing trips suspicion
 - `game/src/patrol.js` — waypoint walking with pauses
 - `game/src/vision.js` — vision cones, line of sight, detection rates
 - `game/src/player.js` — Wren: movement, stances, noise, pebbles, pickups

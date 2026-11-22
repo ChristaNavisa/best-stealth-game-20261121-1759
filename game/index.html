@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>The Merrow Museum — 6 guards, 3 cameras, 8 treasures</title>
+<title>Bellwether — steal the Sunken Bell · 6 guards · 3 cameras · 3 lasers · 8 treasures</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <style>
   html, body { margin: 0; padding: 0; background: #0b0e14; color: #e8e6df;
     font-family: Georgia, 'Times New Roman', serif; }
@@ -37,25 +38,27 @@
 </head>
 <body>
 <div id="wrap">
-  <h1 class="title">The Merrow Museum <span>— Night of the Sunken Bell · 6 guards · 3 cameras · 8 treasures</span></h1>
+  <h1 class="title">Bellwether <span>— steal the Sunken Bell · 6 guards · 3 cameras · 3 lasers · 8 treasures</span></h1>
   <div id="bar">
-    <span id="objective">Steal the Sunken Bell — 6 guards, 3 cameras, 8 treasures.</span>
+    <span id="objective">Steal the Sunken Bell — 6 guards · 3 cameras · 3 lasers.</span>
     <div id="meter"><div id="meter-fill"></div></div>
     <span id="meter-label">Detection 0% — UNSEEN</span>
     <span id="timer">00:00</span>
-    <span id="pebbles">Pebbles 5 · Lures 3 · Coins 0/8</span>
+    <span id="pebbles">Pebbles 5 · Lures 3 · Coins 0/8 · Lasers 3</span>
   </div>
   <div id="stage">
     <canvas id="game" width="960" height="640"></canvas>
     <canvas id="minimap" width="180" height="120"></canvas>
     <div id="overlay">
-      <h1>The Merrow Museum</h1>
-      <p>Midnight. The Sunken Bell — gold, older than the city — sleeps in the
-      central gallery behind six guards who walk the same rounds every night,
-      watched over by three sweeping security cameras. Learn their patrols.
-      Stay out of the lamplight. Slip through the shadows.</p>
-      <p>Steal the Bell — and, if you dare, the Tide Vault's golden idol in the
-      south gallery — then reach the green EXIT in the east wing.</p>
+      <h1>Bellwether</h1>
+      <p>Midnight at the Merrow Museum. The Sunken Bell — gold, older than the
+      city — sleeps in the central gallery behind six guards who walk the same
+      rounds every night, watched over by three sweeping security cameras.
+      Learn their patrols. Stay out of the lamplight. Slip through the shadows.</p>
+      <p>Three laser tripwires guard the doorways — cross one while it burns
+      red and every guard comes looking. Time them. Steal the Bell — and, if
+      you dare, the Tide Vault's golden idol in the south gallery — then reach
+      the green EXIT in the east wing.</p>
       <p class="keys"><b>WASD / arrows</b> move &nbsp;·&nbsp; <b>Shift</b> run (fast, loud) &nbsp;·&nbsp;
       <b>C</b> sneak (slow, silent) &nbsp;·&nbsp; <b>Click</b> throw a pebble to lure a guard &nbsp;·&nbsp;
       <b>X / right-click</b> toss a brass coin lure &nbsp;·&nbsp;
@@ -69,7 +72,8 @@
     <b>suspicious</b> and comes to look; one who sees you clearly gives chase. Break sight,
     hide, and the alarm fades. Running is loud: guards hear it and come to investigate.
     Security cameras sweep red cones: linger in one and it trips a <b>lockdown</b> that
-    sends every guard hunting at once. Toss a brass coin (<b>X</b> or right-click) to pull
+    sends every guard hunting at once. Laser tripwires blink on and off — cross a doorway
+    only while the beam is dark. Toss a brass coin (<b>X</b> or right-click) to pull
     a guard away; pebbles do the same, quieter and shorter.
   </div>
 </div>

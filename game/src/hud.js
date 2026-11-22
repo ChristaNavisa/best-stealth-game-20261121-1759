@@ -17,8 +17,8 @@ export class Hud {
   update(game) {
     const player = game.player;
     this.objective.textContent = player.hasBell
-      ? 'Bell stolen — reach the east exit unseen!'
-      : 'Steal the Sunken Bell — 6 guards, 3 cameras, 8 treasures.';
+      ? 'Bell stolen — reach the east exit unseen! Mind the lasers.'
+      : 'Steal the Sunken Bell — 6 guards · 3 cameras · 3 lasers.';
     const worst = Math.max(0, ...game.guards.map((g) => g.suspicion));
     const pct = Math.min(100, Math.round(worst));
     this.meterFill.style.width = `${pct}%`;
@@ -26,10 +26,12 @@ export class Hud {
     this.meterFill.style.background = worst >= 70 ? '#e5484d' : worst >= 30 ? '#f5a524' : '#46a758';
     this.meterLabel.textContent = game.lockdownT > 0
       ? `LOCKDOWN ${Math.ceil(game.lockdownT)}s — every guard is hunting!`
-      : `Detection ${pct}% — ${stage}`;
+      : game.laserAlarmT > 0
+        ? 'LASER TRIPPED — guards are searching!'
+        : `Detection ${pct}% — ${stage}`;
     const t = Math.floor(game.elapsed);
     this.timer.textContent = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-    this.pebbles.textContent = `Pebbles ${player.pebbles} · Lures ${player.lures} · Coins ${player.coins}/8`;
+    this.pebbles.textContent = `Pebbles ${player.pebbles} · Lures ${player.lures} · Coins ${player.coins}/8 · Lasers 3`;
     this.drawMinimap(game);
   }
 
@@ -66,6 +68,17 @@ export class Hud {
       ctx.rotate(Math.PI / 4);
       ctx.fillRect(-3, -3, 6, 6);
       ctx.restore();
+    }
+    // Laser tripwires: red dashes across their doorways, dim while dark.
+    if (game.lasers) {
+      for (const laser of game.lasers) {
+        ctx.strokeStyle = laser.isOn(game.elapsed) ? '#ff5252' : 'rgba(255, 82, 82, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(laser.x0 * sx, laser.y0 * sy);
+        ctx.lineTo(laser.x1 * sx, laser.y1 * sy);
+        ctx.stroke();
+      }
     }
     for (const camera of game.cameras) {
       ctx.fillStyle = camera.cooldown > 0 ? '#39415a' : '#ff5252';
