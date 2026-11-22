@@ -11,6 +11,7 @@ import { MISSIONS, missionById } from './missions.js';
 import { SmokeField } from './gadgets.js';
 import { Player } from './player.js';
 import { makeGuards } from './guards.js';
+import { makeWarden } from './warden.js';
 import { makeCameras } from './cameras.js';
 import { makeLasers } from './lasers.js';
 import { Input } from './input.js';
@@ -59,6 +60,7 @@ class Game {
     this.player = new Player(playerStart);
     this.player.setMission(mission);
     this.guards = makeGuards(mission.guards);
+    this.warden = makeWarden(mission.warden);
     this.cameras = makeCameras(mission.cameras);
     this.lasers = makeLasers(mission.lasers);
     this.smoke = new SmokeField();
@@ -66,6 +68,7 @@ class Game {
     this.everAlerted = false;
     this.spotted = 0;
     this.alerts = 0;
+    this.whistleT = 0; // seconds left of a Warden-whistle hunt
     this.lockdownT = 0; // seconds left of a camera-triggered lockdown
     this.laserAlarmT = 0; // seconds left of a laser-trip warning
     this.pulses = [];
@@ -78,17 +81,20 @@ class Game {
       const guards = m.guards ? m.guards.length : 6;
       const cams = m.cameras ? m.cameras.length : 3;
       const lasers = m.lasers ? m.lasers.length : 3;
+      const warden = m.warden ? ' + the Night Warden' : '';
       const best = this.ratings[m.id];
       const badge = best ? ` · <b style="color:#ffd76a">${best}</b>` : '';
       return `<button data-mission="${m.id}" style="display:block;width:100%;text-align:left;background:#141a26;border:1px solid #39415a;color:#e8e6df;border-radius:8px;padding:10px 14px;margin:7px 0;cursor:pointer;font-family:Georgia,serif;font-size:15px">
         <b style="color:#e8b93e">Heist ${m.num} — ${m.name}</b>${badge}<br>
-        <span style="font-size:13px;color:#b9c0cf">${guards} guards · ${cams} cameras · ${lasers} lasers · 2 smoke veils · ${m.hint}</span>
+        <span style="font-size:13px;color:#b9c0cf">${guards} guards${warden} · ${cams} cameras · ${lasers} lasers · 2 smoke veils · ${m.hint}</span>
       </button>`;
     }).join('');
     this.showOverlay(
       `<h1>Bellwether</h1><p>Five heists by lamplight. One museum, five nights — ` +
       `steal a different treasure from a different wing each time, then reach ` +
-      `the green EXIT unseen. Finish a heist without ever being spotted for a ` +
+      `the green EXIT unseen. On three nights the <b>Night Warden</b> walks ` +
+      `with a lantern: his light spots you faster, his cone reaches farther, ` +
+      `and his whistle calls every guard at once. Finish a heist without ever being spotted for a ` +
       `<b>GHOST</b> rating.</p>${cards}` +
       `<p class="keys"><b>WASD / arrows</b> move · <b>Shift</b> run (fast, loud) · ` +
       `<b>C</b> sneak (slow, silent) · <b>Click</b> throw a pebble · ` +
@@ -127,8 +133,11 @@ class Game {
   // Alarm level 0–3 for the HUD: calm, suspicious, hunted, lockdown.
   alarmLevel() {
     if (this.lockdownT > 0) return 3;
+    if (this.whistleT > 0) return 3;
     if (this.guards.some((g) => g.state === 'alerted')) return 2;
+    if (this.warden && this.warden.state === 'alerted') return 2;
     if (this.guards.some((g) => g.state === 'suspicious')) return 1;
+    if (this.warden && this.warden.state === 'suspicious') return 1;
     return 0;
   }
 
@@ -182,6 +191,7 @@ class Game {
   step(dt) {
     this.elapsed += dt;
     if (this.lockdownT > 0) this.lockdownT = Math.max(0, this.lockdownT - dt);
+    if (this.whistleT > 0) this.whistleT = Math.max(0, this.whistleT - dt);
     if (this.laserAlarmT > 0) this.laserAlarmT = Math.max(0, this.laserAlarmT - dt);
     this.smoke.update(dt);
     const events = [];
@@ -206,6 +216,9 @@ class Game {
     for (const guard of this.guards) {
       guard.update(dt, this.player, events.filter((e) => e.type === 'noise'), events, this.smoke);
     }
+    if (this.warden) {
+      this.warden.update(dt, this.player, events.filter((e) => e.type === 'noise'), events, this.smoke);
+    }
     for (const camera of this.cameras) {
       camera.update(dt, this.elapsed, this.player, events, this.smoke);
     }
@@ -221,6 +234,9 @@ class Game {
         this.lose(guard);
         break;
       }
+    }
+    if (this.state === 'playing' && this.warden && this.warden.catches(this.player)) {
+      this.lose(this.warden);
     }
     this.hud.update(this);
   }
@@ -263,6 +279,23 @@ class Game {
           guard.suspicion = Math.min(100, guard.suspicion + 40);
           guard.lastSeen = { x: this.player.x, y: this.player.y };
           if (guard.state === 'patrol') guard.state = 'suspicious';
+        }
+      }
+      if (e.type === 'whistle') {
+        // The Warden's whistle: every guard in the museum hunts the
+        // burglar's position at once — the loudest alarm in the game.
+        // Break his sight and hide, and the hunt decays like any other.
+        this.everAlerted = true;
+        this.alerts += 1;
+        this.whistleT = 4;
+        this.sounds.whistle();
+        this.sounds.alarm();
+        this.pulses.push({ x: e.guard.x, y: e.guard.y, r: 10, alpha: 0.9, color: 'rgba(255, 215, 106, 0.95)' });
+        for (const guard of this.guards) {
+          guard.state = 'alerted';
+          guard.suspicion = 100;
+          guard.lastSeen = { x: this.player.x, y: this.player.y };
+          guard.lostTimer = 0;
         }
       }
       if (e.type === 'lockdown') {

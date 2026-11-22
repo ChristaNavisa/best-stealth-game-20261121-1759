@@ -68,6 +68,14 @@ export class SoundBank {
     this._tone(180, 0.4, 'triangle', 0.05, 0.05, 90);
   }
 
+  // A sharp triple blast: the Night Warden's whistle, which summons
+  // every guard in the museum to the burglar's position at once.
+  whistle() {
+    this._tone(2350, 0.12, 'square', 0.08, 0, 2600);
+    this._tone(2350, 0.12, 'square', 0.08, 0.16, 2600);
+    this._tone(2600, 0.22, 'square', 0.09, 0.32, 2350);
+  }
+
   pickup() {
     this._tone(880, 0.12, 'sine', 0.09);
     this._tone(1318, 0.18, 'sine', 0.09, 0.1);

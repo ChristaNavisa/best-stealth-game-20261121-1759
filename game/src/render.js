@@ -8,6 +8,7 @@ import {
 } from './level.js';
 import { CONE_RANGE, CONE_HALF_ANGLE } from './vision.js';
 import { CAM_RANGE, CAM_HALF_ANGLE } from './cameras.js';
+import { WARDEN_RANGE, WARDEN_HALF_ANGLE, LANTERN_RADIUS } from './warden.js';
 
 const FLOOR_A = '#454d5e';
 const FLOOR_B = '#3b4252';
@@ -16,6 +17,7 @@ export function drawWorld(ctx, game) {
   drawFloor(ctx);
   drawProps(ctx, game);
   drawLighting(ctx, game);
+  drawLanternGlow(ctx, game);
   drawCones(ctx, game);
   drawLasers(ctx, game);
   drawObjectives(ctx, game);
@@ -409,6 +411,30 @@ function drawLighting(ctx, game) {
   ctx.drawImage(lightCanvas, 0, 0);
 }
 
+// The Night Warden's lantern: a moving pool of warm gold light on the
+// floor, drawn over the night darkness. Lit floor inside the pool is the
+// most dangerous ground in the museum — suspicion climbs 60% faster
+// there — so the pool has to read at a glance, even at thumbnail size.
+function drawLanternGlow(ctx, game) {
+  const w = game.warden;
+  if (!w) return;
+  const g = ctx.createRadialGradient(w.x, w.y, 6, w.x, w.y, LANTERN_RADIUS);
+  g.addColorStop(0, 'rgba(255, 196, 110, 0.42)');
+  g.addColorStop(0.6, 'rgba(255, 196, 110, 0.22)');
+  g.addColorStop(1, 'rgba(255, 196, 110, 0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(w.x, w.y, LANTERN_RADIUS, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 215, 106, 0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.arc(w.x, w.y, LANTERN_RADIUS, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
 // A cone is drawn twice: a saturated gradient fill, then a crisp edge
 // stroke along its sides and arc, so the field of view reads as a shape
 // even when the screenshot is shrunk to a contact sheet.
@@ -437,6 +463,25 @@ function drawCones(ctx, game) {
     ctx.strokeStyle = edge;
     ctx.lineWidth = 2;
     drawConePath(ctx, guard.x, guard.y, CONE_RANGE, guard.angle, CONE_HALF_ANGLE);
+    ctx.stroke();
+  }
+  // The Night Warden's cone: longer and wider than any guard's, in gold —
+  // the longest sight line in the game, and the one to fear most.
+  if (game.warden) {
+    const w = game.warden;
+    const wFill = w.state === 'alerted'
+      ? 'rgba(229, 72, 77, 0.50)'
+      : w.state === 'suspicious' ? 'rgba(245, 165, 36, 0.46)' : 'rgba(255, 200, 80, 0.40)';
+    const wg = ctx.createRadialGradient(w.x, w.y, 8, w.x, w.y, WARDEN_RANGE);
+    wg.addColorStop(0, wFill);
+    wg.addColorStop(0.75, wFill);
+    wg.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = wg;
+    drawConePath(ctx, w.x, w.y, WARDEN_RANGE, w.angle, WARDEN_HALF_ANGLE);
+    ctx.fill();
+    ctx.strokeStyle = w.state === 'alerted' ? 'rgba(255, 120, 120, 0.85)' : 'rgba(255, 215, 106, 0.8)';
+    ctx.lineWidth = 2.5;
+    drawConePath(ctx, w.x, w.y, WARDEN_RANGE, w.angle, WARDEN_HALF_ANGLE);
     ctx.stroke();
   }
   // Security cameras sweep red cones across their galleries.
@@ -504,6 +549,64 @@ function drawEntities(ctx, game) {
       ctx.font = 'bold 22px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(guard.state === 'alerted' ? '!' : '?', guard.x, guard.y - 22);
+    }
+  }
+  // The Night Warden: taller than the other guards, navy with gold trim,
+  // his lantern swinging ahead of him — unmistakable at a glance.
+  if (game.warden) {
+    const w = game.warden;
+    ctx.fillStyle = '#2e3a6e';
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffd76a';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.fillStyle = '#e8ddc2';
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, 7, 0, Math.PI * 2);
+    ctx.fill();
+    // The lantern: a bright gold dot carried ahead, in the facing direction.
+    const lx = w.x + Math.cos(w.angle) * 22;
+    const ly = w.y + Math.sin(w.angle) * 22;
+    ctx.fillStyle = '#ffd76a';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 215, 106, 0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 9, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(w.x, w.y);
+    ctx.lineTo(w.x + Math.cos(w.angle) * 21, w.y + Math.sin(w.angle) * 21);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255, 215, 106, 0.95)';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('WARDEN', w.x, w.y - 20);
+    if (w.state !== 'patrol') {
+      ctx.fillStyle = w.state === 'alerted' ? '#ff5252' : '#ffc53d';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(w.state === 'alerted' ? '!' : '?', w.x, w.y - 32);
+    }
+    // While the whistle hunt runs, an expanding gold ring shouts it.
+    if (game.whistleT > 0) {
+      const rr = 26 + (4 - game.whistleT) * 26;
+      ctx.strokeStyle = `rgba(255, 215, 106, ${0.35 + 0.55 * (game.whistleT / 4)})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(w.x, w.y, rr, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ffd76a';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(8, 10, 18, 0.85)';
+      ctx.strokeText('WHISTLE!', w.x, w.y - 48);
+      ctx.fillText('WHISTLE!', w.x, w.y - 48);
     }
   }
   // Wren: a teal hooded figure, cloak pointing where she faces — bigger

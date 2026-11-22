@@ -25,6 +25,7 @@ export class Guard {
     this.lastSeen = null; // {x, y} of the last thing that drew attention
     this.lostTimer = 0; // seconds without sight while alerted
     this.scanTimer = 0; // seconds spent looking around at an investigate point
+    this.scanBase = null; // facing when a search sweep starts (sweeps around it)
     this.stepTimer = 0; // footstep pacing
     this.radius = 12;
   }
@@ -84,6 +85,7 @@ export class Guard {
       if (this.lostTimer > 3.5) {
         this.state = 'suspicious';
         this.scanTimer = 0;
+        this.scanBase = null;
         events.push({ type: 'lost', guard: this });
       }
       return;
@@ -100,19 +102,25 @@ export class Guard {
           this.x += (dx / dist) * step;
           this.y += (dy / dist) * step;
         } else {
-          // Arrived: look around for a while, then give up and go back.
+          // Arrived: sweep the gaze back and forth across the spot where
+          // the burglar was last seen, then give up and go back. A full
+          // spin would turn the guard's back on a burglar standing right
+          // beside him; a sweep keeps the spot under watch while he looks.
+          if (this.scanBase === null) this.scanBase = this.angle;
           this.scanTimer += dt;
-          this.angle += dt * 1.4;
+          this.angle = this.scanBase + Math.sin(this.scanTimer * 1.6) * 0.9;
           if (this.scanTimer > 2.2) {
             this.state = 'patrol';
             this.suspicion = 0;
             this.lastSeen = null;
             this.scanTimer = 0;
+            this.scanBase = null;
           }
         }
       } else {
         this.state = 'patrol';
         this.suspicion = 0;
+        this.scanBase = null;
       }
       return;
     }

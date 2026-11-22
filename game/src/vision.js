@@ -8,18 +8,19 @@ export const CONE_HALF_ANGLE = 0.62; // ~35 degrees each side
 
 // Is the point (px, py) inside the guard's vision cone with a clear sight line?
 // Smoke blinds: a guard cannot see a burglar standing in a veil, nor
-// through a veil lying between them.
-export function inVisionCone(guard, px, py, smoke) {
+// through a veil lying between them. The Night Warden calls this with his
+// own longer range and wider half-angle; every other guard uses the defaults.
+export function inVisionCone(guard, px, py, smoke, range = CONE_RANGE, halfAngle = CONE_HALF_ANGLE) {
   const dx = px - guard.x;
   const dy = py - guard.y;
   const dist = Math.hypot(dx, dy);
-  if (dist > CONE_RANGE || dist < 1) return dist < 1;
+  if (dist > range || dist < 1) return dist < 1;
   if (smoke && (smoke.covers(px, py) || smoke.blocks(guard.x, guard.y, px, py))) return false;
   const ang = Math.atan2(dy, dx);
   let diff = ang - guard.angle;
   while (diff > Math.PI) diff -= Math.PI * 2;
   while (diff < -Math.PI) diff += Math.PI * 2;
-  if (Math.abs(diff) > CONE_HALF_ANGLE) return false;
+  if (Math.abs(diff) > halfAngle) return false;
   return losClear(guard.x, guard.y, px, py);
 }
 

@@ -19,8 +19,9 @@ export const MISSIONS = [
     guards: null, // the full museum: all six guards on their usual rounds
     cameras: null, // all three cameras
     lasers: null, // all three tripwires
+    warden: true, // the Night Warden circles the Bell with his lantern
     requiresVault: false,
-    hint: 'The classic job. Learn the rounds, mind the lasers, slip out east.',
+    hint: 'The classic job. The Warden circles the Bell — mind his lantern, mind the lasers, slip out east.',
   },
   {
     id: 'idol',
@@ -59,8 +60,9 @@ export const MISSIONS = [
     ],
     cameras: ['Cam A', 'Cam B'],
     lasers: ['Laser N', 'Laser E'],
+    warden: true, // the Warden walks the north gallery too, lantern first
     requiresVault: false,
-    hint: 'Sable has moved north to guard the lectern. The north door laser still burns.',
+    hint: 'Sable has moved north to guard the lectern — and the Warden walks the north gallery with his lantern.',
   },
   {
     id: 'astrolabe',
@@ -93,8 +95,9 @@ export const MISSIONS = [
     guards: null,
     cameras: null,
     lasers: null,
+    warden: true, // the hardest night: six guards, the Warden, and two treasures
     requiresVault: true,
-    hint: 'Everything, in one night. The Bell, the Idol, and the east-wing exit.',
+    hint: 'Everything, in one night. The Bell, the Idol — and the Warden between them.',
   },
 ];
 

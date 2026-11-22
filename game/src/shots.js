@@ -9,9 +9,12 @@ export function applyShot(game, name) {
   const p = game.player;
   const [marlow, ivo, pell, sable, bram, odo] = game.guards;
   const [camA, camB, camC] = game.cameras;
+  const w = game.warden;
   if (name === 'cover') {
     // The whole game at once, at its tensest second: Wren one step from
-    // the Bell, Pell's amber cone sweeping straight at her with a "?",
+    // the Bell, the NIGHT WARDEN's long gold cone sweeping straight at her
+    // with a "?", his lantern pool washing the floor gold around them —
+    // Pell's amber cone sweeping straight at her with a "?",
     // Sable closing in, Cam A hot, Laser S and Laser E burning red across
     // their doorways while Laser N sits dark — every system in one frame.
     // A smoke veil blooms beside her, blinding Pell's cone mid-sweep.
@@ -22,6 +25,11 @@ export function applyShot(game, name) {
     p.stance = 'sneak';
     p.angle = 0;
     game.smoke.throwAt(tileCenter(12, 10).x, tileCenter(12, 10).y);
+    if (w) {
+      w.x = tileCenter(17, 10).x; w.y = tileCenter(17, 10).y;
+      w.angle = Math.PI; w.state = 'suspicious'; w.suspicion = 58;
+      w.lastSeen = { x: p.x, y: p.y };
+    }
     pell.x = tileCenter(16, 9).x; pell.y = tileCenter(16, 9).y;
     pell.angle = Math.PI; pell.state = 'suspicious'; pell.suspicion = 58;
     pell.lastSeen = { x: p.x, y: p.y };
@@ -43,11 +51,21 @@ export function applyShot(game, name) {
     // A near-miss: Wren inches from Pell's cone, suspicion climbing, a
     // camera's cone already amber — the moment the detection system is
     // built for. A smoke veil blooms over Pell himself: blinded, he
-    // cannot finish the spot. Elapsed 63 s so the clock reads mid-heist.
+    // cannot finish the spot. And the WARDEN has just blown his whistle:
+    // alerted, gold ring expanding, every guard turning toward Wren.
+    // Elapsed 63 s so the clock reads mid-heist.
     game.elapsed = 63;
     p.x = tileCenter(14, 9).x; p.y = tileCenter(14, 9).y;
     p.stance = 'walk';
     game.smoke.throwAt(tileCenter(17, 9).x, tileCenter(17, 9).y);
+    if (w) {
+      w.x = tileCenter(17, 11).x; w.y = tileCenter(17, 11).y;
+      w.angle = -Math.PI / 2; w.state = 'alerted'; w.suspicion = 100;
+      w.lastSeen = { x: p.x, y: p.y };
+      w.whistleBlown = true;
+      game.whistleT = 4;
+      game.everAlerted = true;
+    }
     pell.x = tileCenter(16, 9).x; pell.y = tileCenter(16, 9).y;
     pell.angle = Math.PI; pell.state = 'suspicious'; pell.suspicion = 58;
     pell.lastSeen = { x: p.x, y: p.y };
@@ -75,6 +93,10 @@ export function applyShot(game, name) {
     p.coins = 2;
     p.x = tileCenter(25, 10).x; p.y = tileCenter(25, 10).y;
     p.stance = 'sneak';
+    if (w) {
+      w.x = tileCenter(18, 11).x; w.y = tileCenter(18, 11).y;
+      w.angle = Math.PI / 2; w.state = 'patrol'; w.suspicion = 0;
+    }
     odo.x = tileCenter(26, 13).x; odo.y = tileCenter(26, 13).y;
     odo.angle = -Math.PI / 2; odo.state = 'patrol'; odo.suspicion = 0;
     pell.x = tileCenter(12, 11).x; pell.y = tileCenter(12, 11).y;

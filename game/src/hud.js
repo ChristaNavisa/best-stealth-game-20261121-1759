@@ -20,7 +20,7 @@ export class Hud {
     this.objective.textContent = player.hasTarget
       ? (m.requiresVault && !player.hasVault ? 'Steal the Idol, then escape!' : 'Stolen — escape to the EXIT!')
       : m.brief;
-    const worst = Math.max(0, ...game.guards.map((g) => g.suspicion));
+    const worst = Math.max(0, ...game.guards.map((g) => g.suspicion), game.warden ? game.warden.suspicion : 0);
     const pct = Math.min(100, Math.round(worst));
     this.meterFill.style.width = `${pct}%`;
     const stage = worst >= 70 ? 'ALERTED' : worst >= 30 ? 'SUSPICIOUS' : 'UNSEEN';
@@ -30,9 +30,11 @@ export class Hud {
     const level = game.alarmLevel ? game.alarmLevel() : 0;
     this.meterLabel.textContent = game.lockdownT > 0
       ? `LOCKDOWN ${Math.ceil(game.lockdownT)}s — every guard is hunting!`
-      : game.laserAlarmT > 0
-        ? 'LASER TRIPPED — guards are searching!'
-        : `Alarm ${level}/3 · ${pct}% — ${stage}`;
+      : game.whistleT > 0
+        ? `WARDEN WHISTLE ${Math.ceil(game.whistleT)}s — every guard is coming!`
+        : game.laserAlarmT > 0
+          ? 'LASER TRIPPED — guards are searching!'
+          : `Alarm ${level}/3 · ${pct}% — ${stage}`;
     const t = Math.floor(game.elapsed);
     this.timer.textContent = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
     this.pebbles.textContent = `Pebbles ${player.pebbles} · Smoke ${player.smokes} · Lures ${player.lures} · Coins ${player.coins}/8`;
@@ -105,6 +107,16 @@ export class Hud {
       ctx.lineTo(-4, 4);
       ctx.closePath();
       ctx.fill();
+      ctx.restore();
+    }
+    // The Night Warden: a gold diamond — the one guard you must watch most.
+    if (game.warden) {
+      const w = game.warden;
+      ctx.fillStyle = w.state === 'alerted' ? '#ff2e2e' : '#ffd76a';
+      ctx.save();
+      ctx.translate(w.x * sx, w.y * sy);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-4, -4, 8, 8);
       ctx.restore();
     }
     // Player: teal dot with a white rim.

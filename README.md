@@ -1,4 +1,4 @@
-# Bellwether — Five Heists by Lamplight: 5 heists, 6 guards, smoke veils, coin lures & ghost ratings
+# Bellwether — Five Heists by Lamplight: the Night Warden, lantern & whistle, 7 guards, smoke veils, coin lures & ghost ratings
 
 [![Make the best stealth game](https://make.fun/badge/best-stealth-game-20261121-1759.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
 [![Rank](https://make.fun/badge/best-stealth-game-20261121-1759/ChristaNavisa/best-stealth-game-20261121-1759/rank.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
@@ -11,19 +11,41 @@ Each heist steals a different treasure from a different wing, with its own guard
 on their own patrols, its own cameras and lasers: the Sunken Bell, the Tide Idol,
 the Gilded Manuscript, the Brass Astrolabe — and the Grand Haul, which demands the
 Bell **and** the Idol in a single night. Then she escapes through the east wing
-without ever being caught.
+without ever being caught. On three of the five nights the **Night Warden**
+walks the galleries with a lantern: his gold cone reaches farther than any
+guard's, his lantern light spots you 60% faster, and the first time he truly
+sees you he blows his whistle — every guard in the museum comes hunting at
+once. A smoke veil is the only way past him: it blinds his lantern and his
+cone alike.
 
 ## Five heists
 
 Pick a job from the heist list (click a card, or press 1–5). One museum, five nights:
 
-| Heist | Treasure | Guards | Cameras | Lasers |
-| --- | --- | --- | --- | --- |
-| I — The Sunken Bell | The Sunken Bell, central gallery | 6 | 3 | 3 |
-| II — The Tide Idol | The Tide Idol, south gallery | 4 | 2 | 2 |
-| III — The Gilded Manuscript | The Manuscript, north gallery | 4 | 2 | 2 |
-| IV — The Brass Astrolabe | The Astrolabe, east wing | 3 | 1 | 1 |
-| V — The Grand Haul | The Bell **and** the Idol | 6 | 3 | 3 |
+| Heist | Treasure | Guards | Warden | Cameras | Lasers |
+| --- | --- | --- | --- | --- | --- |
+| I — The Sunken Bell | The Sunken Bell, central gallery | 6 | yes | 3 | 3 |
+| II — The Tide Idol | The Tide Idol, south gallery | 4 | no | 2 | 2 |
+| III — The Gilded Manuscript | The Manuscript, north gallery | 4 | yes | 2 | 2 |
+| IV — The Brass Astrolabe | The Astrolabe, east wing | 3 | no | 1 | 1 |
+| V — The Grand Haul | The Bell **and** the Idol | 6 | yes | 3 | 3 |
+
+## The Night Warden
+
+- **A lantern that moves:** a pool of warm gold light walks the galleries with
+  him, circling the Sunken Bell. Inside it, suspicion climbs 60% faster than
+  in the dark at the same distance. The pool is drawn on the floor, dashed
+  at its edge, so you can read the danger before stepping into it.
+- **The longest cone in the game:** 235 px, 41° each side — gold, not yellow —
+  so his sight line reads as a different, bigger threat than any guard's.
+- **The whistle:** the first time he truly spots you, he blows a triple blast
+  and every guard in the museum is alerted to your position for 4 seconds
+  (WHISTLE on the HUD, alarm 3/3). Break his sight, hide, and the hunt decays
+  — and his next hunt gets a fresh whistle.
+- **Faster than the rest:** he investigates at 2.0 tiles/s and chases at
+  2.9 tiles/s. He hears pebbles and coin lures like any guard, and he is
+  blinded by smoke veils like any guard — a veil over him is the way to walk
+  straight past the Bell.
 
 Guards move between heists: Pell patrols the middle floor on the Idol job, Sable
 moves north to guard the Manuscript's lectern, and Odo owns the east wing alone
@@ -48,7 +70,9 @@ on the Astrolabe job. Every heist carries 2 smoke veils, 5 pebbles and 3 coin lu
   plants slow it down.
 - **A detection system that forgives:** suspicious guards walk over to look; alerted
   guards chase. Break their sight, hide, and the alarm decays — a near-miss is a
-  story, not a game over. The HUD's alarm level (0–3: calm, suspicious, hunted,
+  story, not a game over. A guard who reaches the spot sweeps his gaze back and
+  forth across it instead of spinning away, so hiding right beside him is no
+  free pass. The HUD's alarm level (0–3: calm, suspicious, hunted,
   lockdown) shows how hot you are.
 - **Ghost ratings:** finish a heist without ever being spotted for **GHOST**, spotted
   but never chased for **SHADOW**, chased but escaped for **ALARMED**. Your best
@@ -93,6 +117,7 @@ on the Astrolabe job. Every heist carries 2 smoke veils, 5 pebbles and 3 coin lu
 - `game/src/missions.js` — the five heists: target, guards, cameras, lasers, briefing
 - `game/src/gadgets.js` — the smoke veil: clouds that blind guards and cameras
 - `game/src/level.js` — the museum floor plan (walls, cover, lamps, objectives)
+- `game/src/warden.js` — the Night Warden: lantern light, long gold cone, whistle hunts
 - `game/src/guards.js` — guard brains: patrol, suspicion, investigation, chase
 - `game/src/cameras.js` — security cameras: sweeping cones, suspicion, lockdown
 - `game/src/lasers.js` — laser tripwires: fixed blink cycle, crossing trips suspicion
