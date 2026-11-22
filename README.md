@@ -1,4 +1,4 @@
-# Bellwether — steal the Sunken Bell: 6 guards, 3 cameras, 3 lasers, 8 treasures, coin lures & lockdown alarm
+# Bellwether — Five Heists by Lamplight: 5 heists, 6 guards, smoke veils, coin lures & ghost ratings
 
 [![Make the best stealth game](https://make.fun/badge/best-stealth-game-20261121-1759.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
 [![Rank](https://make.fun/badge/best-stealth-game-20261121-1759/ChristaNavisa/best-stealth-game-20261121-1759/rank.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
@@ -6,11 +6,28 @@
 
 A top-down stealth game made for the make.fun bounty **Make the best stealth game**
 (`best-stealth-game-20261121-1759`). Midnight at the Merrow Museum: Wren the burglar
-slips in to steal the Sunken Bell — gold, older than the city — from the central
-gallery, then escapes through the east wing without ever being caught. Six guards
-walk the galleries, three security cameras sweep red cones over them, three laser
-tripwires blink across the doorways, and a second vault in the south gallery hides
-the Tide Vault's golden idol for burglars who dare.
+slips in to steal — not one treasure, but one of five, on five different nights.
+Each heist steals a different treasure from a different wing, with its own guards
+on their own patrols, its own cameras and lasers: the Sunken Bell, the Tide Idol,
+the Gilded Manuscript, the Brass Astrolabe — and the Grand Haul, which demands the
+Bell **and** the Idol in a single night. Then she escapes through the east wing
+without ever being caught.
+
+## Five heists
+
+Pick a job from the heist list (click a card, or press 1–5). One museum, five nights:
+
+| Heist | Treasure | Guards | Cameras | Lasers |
+| --- | --- | --- | --- | --- |
+| I — The Sunken Bell | The Sunken Bell, central gallery | 6 | 3 | 3 |
+| II — The Tide Idol | The Tide Idol, south gallery | 4 | 2 | 2 |
+| III — The Gilded Manuscript | The Manuscript, north gallery | 4 | 2 | 2 |
+| IV — The Brass Astrolabe | The Astrolabe, east wing | 3 | 1 | 1 |
+| V — The Grand Haul | The Bell **and** the Idol | 6 | 3 | 3 |
+
+Guards move between heists: Pell patrols the middle floor on the Idol job, Sable
+moves north to guard the Manuscript's lectern, and Odo owns the east wing alone
+on the Astrolabe job. Every heist carries 2 smoke veils, 5 pebbles and 3 coin lures.
 
 ## The game
 
@@ -31,7 +48,14 @@ the Tide Vault's golden idol for burglars who dare.
   plants slow it down.
 - **A detection system that forgives:** suspicious guards walk over to look; alerted
   guards chase. Break their sight, hide, and the alarm decays — a near-miss is a
-  story, not a game over.
+  story, not a game over. The HUD's alarm level (0–3: calm, suspicious, hunted,
+  lockdown) shows how hot you are.
+- **Ghost ratings:** finish a heist without ever being spotted for **GHOST**, spotted
+  but never chased for **SHADOW**, chased but escaped for **ALARMED**. Your best
+  rating per heist is kept on the heist list for the session.
+- **Smoke veils:** throw a veil (Q, 2 per heist) where a cone cannot be dodged — guards
+  and cameras cannot see through smoke, or see you standing inside it. The way to
+  walk straight across a lit gallery, or to vanish mid-chase.
 - **Noise is a tool and a risk:** running is fast but loud enough for guards to hear;
   walking is quiet; sneaking is silent. Click to throw a pebble and lure a guard away.
 - **Coin lures:** toss a brass coin (X or right-click, 3 per run) — it lands with a
@@ -55,7 +79,9 @@ the Tide Vault's golden idol for burglars who dare.
 | Shift | Run — fast, but loud |
 | C | Sneak — slow, silent |
 | Click | Throw a pebble (5 per run) to lure a guard |
+| Q | Throw a smoke veil (2 per heist) — blinds guards and cameras |
 | X / right-click | Toss a brass coin lure (3 per run) — louder, pulls guards farther |
+| 1–5 | Pick a heist on the heist list |
 | P / Esc | Pause |
 | R | Restart after win / loss / pause |
 | Enter / click | Start |
@@ -63,7 +89,9 @@ the Tide Vault's golden idol for burglars who dare.
 ## Layout
 
 - `game/index.html` — page, HUD and canvas
-- `game/src/main.js` — bootstrap, game loop, state machine
+- `game/src/main.js` — bootstrap, game loop, state machine, heist select, ghost ratings
+- `game/src/missions.js` — the five heists: target, guards, cameras, lasers, briefing
+- `game/src/gadgets.js` — the smoke veil: clouds that blind guards and cameras
 - `game/src/level.js` — the museum floor plan (walls, cover, lamps, objectives)
 - `game/src/guards.js` — guard brains: patrol, suspicion, investigation, chase
 - `game/src/cameras.js` — security cameras: sweeping cones, suspicion, lockdown

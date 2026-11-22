@@ -14,12 +14,14 @@ export function applyShot(game, name) {
     // the Bell, Pell's amber cone sweeping straight at her with a "?",
     // Sable closing in, Cam A hot, Laser S and Laser E burning red across
     // their doorways while Laser N sits dark — every system in one frame.
+    // A smoke veil blooms beside her, blinding Pell's cone mid-sweep.
     // Elapsed 47 s: Laser N off (47+0)%4=3.0, Laser S on (47+1.3)%4=0.3,
     // Laser E on (47+2.6)%4=1.6.
     game.elapsed = 47;
     p.x = tileCenter(13, 10).x; p.y = tileCenter(13, 10).y;
     p.stance = 'sneak';
     p.angle = 0;
+    game.smoke.throwAt(tileCenter(12, 10).x, tileCenter(12, 10).y);
     pell.x = tileCenter(16, 9).x; pell.y = tileCenter(16, 9).y;
     pell.angle = Math.PI; pell.state = 'suspicious'; pell.suspicion = 58;
     pell.lastSeen = { x: p.x, y: p.y };
@@ -40,10 +42,12 @@ export function applyShot(game, name) {
   } else if (name === 'chase') {
     // A near-miss: Wren inches from Pell's cone, suspicion climbing, a
     // camera's cone already amber — the moment the detection system is
-    // built for. Elapsed 63 s so the clock reads mid-heist.
+    // built for. A smoke veil blooms over Pell himself: blinded, he
+    // cannot finish the spot. Elapsed 63 s so the clock reads mid-heist.
     game.elapsed = 63;
     p.x = tileCenter(14, 9).x; p.y = tileCenter(14, 9).y;
     p.stance = 'walk';
+    game.smoke.throwAt(tileCenter(17, 9).x, tileCenter(17, 9).y);
     pell.x = tileCenter(16, 9).x; pell.y = tileCenter(16, 9).y;
     pell.angle = Math.PI; pell.state = 'suspicious'; pell.suspicion = 58;
     pell.lastSeen = { x: p.x, y: p.y };
@@ -67,6 +71,7 @@ export function applyShot(game, name) {
     // Laser E has just gone dark (132+2.6)%4=2.6 — the escape window.
     game.elapsed = 132;
     p.hasBell = true;
+    p.hasTarget = true;
     p.coins = 2;
     p.x = tileCenter(25, 10).x; p.y = tileCenter(25, 10).y;
     p.stance = 'sneak';
@@ -88,6 +93,7 @@ export function applyShot(game, name) {
   } else if (name === 'win') {
     // The win screen itself, after a clean escape.
     p.hasBell = true;
+    p.hasTarget = true;
     p.hasVault = true;
     p.coins = 8;
     p.lures = 1;
@@ -104,7 +110,8 @@ export function installDebugHandle(game) {
     game,
     state: () => ({
       phase: game.state,
-      player: { x: game.player.x, y: game.player.y, bell: game.player.hasBell, vault: game.player.hasVault, coins: game.player.coins, lures: game.player.lures },
+      mission: game.mission.id,
+      player: { x: game.player.x, y: game.player.y, bell: game.player.hasBell, vault: game.player.hasVault, coins: game.player.coins, lures: game.player.lures, smokes: game.player.smokes, target: game.player.hasTarget },
       guards: game.guards.map((g) => ({ name: g.name, state: g.state, suspicion: Math.round(g.suspicion) })),
       cameras: game.cameras.map((c) => ({ name: c.name, suspicion: Math.round(c.suspicion), cooldown: Math.round(c.cooldown * 10) / 10 })),
       lockdownT: Math.round(game.lockdownT * 10) / 10,

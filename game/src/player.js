@@ -16,8 +16,13 @@ export class Player {
     this.stance = 'walk'; // walk | sneak | run
     this.hasBell = false;
     this.hasVault = false; // the Tide Vault's golden idol, optional loot
+    this.hasTarget = false; // this heist's treasure (Bell, Idol, Manuscript, Astrolabe)
+    this.targetSpot = bellSpot; // set by setMission
+    this.targetKey = 'bell';
+    this.requiresVault = false; // the Grand Haul needs the Idol too
     this.coins = 0;
     this.pebbles = 5;
+    this.smokes = 2; // smoke veils: thrown with Q, they blind guards and cameras
     this.lures = 3; // brass coins to throw: they clatter and pull guards over
     this.stepTimer = 0;
     this.moving = false;
@@ -94,10 +99,42 @@ export class Player {
     return true;
   }
 
+  // A heist sets the job: which treasure to steal, and whether the Idol
+  // is also required before the exit opens.
+  setMission(mission) {
+    this.targetSpot = mission.targetSpot;
+    this.targetKey = mission.targetKey;
+    this.requiresVault = mission.requiresVault;
+  }
+
+  // Throw a smoke veil toward a point: it blooms into a cloud that blinds
+  // guards and cameras for six seconds. Returns false with none left.
+  throwSmoke(tx, ty, events) {
+    if (this.smokes <= 0) return false;
+    this.smokes -= 1;
+    const dx = tx - this.x;
+    const dy = ty - this.y;
+    const dist = Math.hypot(dx, dy);
+    const range = Math.min(dist, 260);
+    const lx = this.x + (dx / (dist || 1)) * range;
+    const ly = this.y + (dy / (dist || 1)) * range;
+    events.push({ type: 'smoke', x: lx, y: ly });
+    return true;
+  }
+
   pickups(events) {
-    if (!this.hasBell && Math.hypot(this.x - bellSpot.x, this.y - bellSpot.y) < 26) {
-      this.hasBell = true;
-      events.push({ type: 'bell' });
+    // This heist's treasure: the Bell, the Idol, the Manuscript or the Astrolabe.
+    if (!this.hasTarget && Math.hypot(this.x - this.targetSpot.x, this.y - this.targetSpot.y) < 26) {
+      this.hasTarget = true;
+      if (this.targetKey === 'bell') {
+        this.hasBell = true;
+        events.push({ type: 'bell' });
+      } else if (this.targetKey === 'vault') {
+        this.hasVault = true;
+        events.push({ type: 'vault' });
+      } else {
+        events.push({ type: 'target' });
+      }
     }
     if (!this.hasVault && Math.hypot(this.x - vaultSpot.x, this.y - vaultSpot.y) < 26) {
       this.hasVault = true;
@@ -117,6 +154,12 @@ export class Player {
   }
 
   atExit() {
-    return this.hasBell && Math.hypot(this.x - exitSpot.x, this.y - exitSpot.y) < 26;
+    // The exit opens once this heist's treasure is stolen — and, for the
+    // Grand Haul, once the Tide Idol is stolen too.
+    return (
+      this.hasTarget &&
+      (!this.requiresVault || this.hasVault) &&
+      Math.hypot(this.x - exitSpot.x, this.y - exitSpot.y) < 26
+    );
   }
 }

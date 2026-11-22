@@ -68,11 +68,17 @@ export class Laser {
 
 // Three beams: the north and south gallery doors (cross them for the
 // north coins and the Tide Vault) and the east-wing door (the only direct
-// way out with the Bell — the escape itself is timed).
-export function makeLasers() {
-  return [
-    new Laser({ name: 'Laser N', tx: 14, ty: 7, vertical: true, phase: 0 }),
-    new Laser({ name: 'Laser S', tx: 14, ty: 14, vertical: true, phase: 1.3 }),
-    new Laser({ name: 'Laser E', tx: 23, ty: 10, vertical: false, phase: 2.6 }),
-  ];
+// way out with the Bell — the escape itself is timed). A heist may field
+// a subset.
+const DEFAULT_LASER_DEFS = [
+  { name: 'Laser N', tx: 14, ty: 7, vertical: true, phase: 0 },
+  { name: 'Laser S', tx: 14, ty: 14, vertical: true, phase: 1.3 },
+  { name: 'Laser E', tx: 23, ty: 10, vertical: false, phase: 2.6 },
+];
+
+export function makeLasers(names) {
+  const defs = names
+    ? DEFAULT_LASER_DEFS.filter((d) => names.includes(d.name))
+    : DEFAULT_LASER_DEFS;
+  return defs.map((d) => new Laser(d));
 }

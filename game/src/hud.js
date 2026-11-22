@@ -16,22 +16,26 @@ export class Hud {
 
   update(game) {
     const player = game.player;
-    this.objective.textContent = player.hasBell
-      ? 'Bell stolen — reach the east exit unseen! Mind the lasers.'
-      : 'Steal the Sunken Bell — 6 guards · 3 cameras · 3 lasers.';
+    const m = game.mission;
+    this.objective.textContent = player.hasTarget
+      ? (m.requiresVault && !player.hasVault ? 'Steal the Idol, then escape!' : 'Stolen — escape to the EXIT!')
+      : m.brief;
     const worst = Math.max(0, ...game.guards.map((g) => g.suspicion));
     const pct = Math.min(100, Math.round(worst));
     this.meterFill.style.width = `${pct}%`;
     const stage = worst >= 70 ? 'ALERTED' : worst >= 30 ? 'SUSPICIOUS' : 'UNSEEN';
     this.meterFill.style.background = worst >= 70 ? '#e5484d' : worst >= 30 ? '#f5a524' : '#46a758';
+    // Alarm level 0–3: calm, suspicious, hunted, lockdown — it decays
+    // when you break sight, so a near-miss is recoverable.
+    const level = game.alarmLevel ? game.alarmLevel() : 0;
     this.meterLabel.textContent = game.lockdownT > 0
       ? `LOCKDOWN ${Math.ceil(game.lockdownT)}s — every guard is hunting!`
       : game.laserAlarmT > 0
         ? 'LASER TRIPPED — guards are searching!'
-        : `Detection ${pct}% — ${stage}`;
+        : `Alarm ${level}/3 · ${pct}% — ${stage}`;
     const t = Math.floor(game.elapsed);
     this.timer.textContent = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-    this.pebbles.textContent = `Pebbles ${player.pebbles} · Lures ${player.lures} · Coins ${player.coins}/8 · Lasers 3`;
+    this.pebbles.textContent = `Pebbles ${player.pebbles} · Smoke ${player.smokes} · Lures ${player.lures} · Coins ${player.coins}/8`;
     this.drawMinimap(game);
   }
 
@@ -51,17 +55,17 @@ export class Hud {
         }
       }
     }
-    // Exit (green), bell (gold), coins (pale gold).
+    // Exit (green), this heist's target (gold), coins (pale gold).
     ctx.fillStyle = '#46a758';
     ctx.fillRect((exitSpot.x - 8) * sx, (exitSpot.y - 8) * sy, 16 * sx, 16 * sy);
-    if (!game.player.hasBell) {
+    if (!game.player.hasTarget) {
       ctx.fillStyle = '#e8b93e';
       ctx.beginPath();
-      ctx.arc(bellSpot.x * sx, bellSpot.y * sy, 4, 0, Math.PI * 2);
+      ctx.arc(game.mission.targetSpot.x * sx, game.mission.targetSpot.y * sy, 4, 0, Math.PI * 2);
       ctx.fill();
     }
     // The Tide Vault (gold diamond) and the cameras (red squares).
-    if (!game.player.hasVault) {
+    if (!game.player.hasVault && game.mission.targetKey !== 'vault') {
       ctx.fillStyle = '#ffd700';
       ctx.save();
       ctx.translate(vaultSpot.x * sx, vaultSpot.y * sy);

@@ -62,6 +62,12 @@ export class SoundBank {
     this._tone(2637, 0.08, 'sine', 0.05, 0.14);
   }
 
+  // The smoke veil: a soft descending whoosh as the vial bursts.
+  smoke() {
+    this._tone(320, 0.35, 'sine', 0.06, 0, 120);
+    this._tone(180, 0.4, 'triangle', 0.05, 0.05, 90);
+  }
+
   pickup() {
     this._tone(880, 0.12, 'sine', 0.09);
     this._tone(1318, 0.18, 'sine', 0.09, 0.1);

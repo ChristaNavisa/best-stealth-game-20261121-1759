@@ -4,7 +4,7 @@
 
 import {
   TILE, COLS, ROWS, grid, T_WALL, T_CRATE, T_CASE,
-  lamps, plants, bellSpot, vaultSpot, exitSpot,
+  lamps, plants, vaultSpot, exitSpot,
 } from './level.js';
 import { CONE_RANGE, CONE_HALF_ANGLE } from './vision.js';
 import { CAM_RANGE, CAM_HALF_ANGLE } from './cameras.js';
@@ -20,6 +20,9 @@ export function drawWorld(ctx, game) {
   drawLasers(ctx, game);
   drawObjectives(ctx, game);
   drawEntities(ctx, game);
+  // Smoke veils last, over the guards and cones: a veil should look like
+  // it hides what is inside it.
+  if (game.smoke) game.smoke.draw(ctx);
   drawPulses(ctx, game);
   if (game.lockdownT > 0) drawLockdownFrame(ctx, game);
 }
@@ -198,75 +201,119 @@ function drawLasers(ctx, game) {
   }
 }
 
+// The treasure icon on its pedestal, by heist: a bell, a golden idol,
+// a gold-leafed scroll, or a brass astrolabe ring.
+function drawTreasureIcon(ctx, key, x, y) {
+  ctx.fillStyle = '#e8b93e';
+  if (key === 'bell') {
+    ctx.beginPath();
+    ctx.arc(x, y, 13, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(x - 15, y, 30, 4);
+  } else if (key === 'vault') {
+    ctx.beginPath();
+    ctx.arc(x, y - 8, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(x - 6, y - 3, 12, 11);
+    ctx.fillRect(x - 8, y + 8, 16, 4);
+  } else if (key === 'manuscript') {
+    ctx.fillRect(x - 14, y - 10, 28, 20);
+    ctx.fillStyle = '#8a6a3e';
+    ctx.fillRect(x - 10, y - 5, 20, 2);
+    ctx.fillRect(x - 10, y + 1, 20, 2);
+    ctx.fillRect(x - 10, y + 7, 14, 2);
+    ctx.fillStyle = '#e8b93e';
+    ctx.fillRect(x - 16, y - 11, 3, 22);
+    ctx.fillRect(x + 13, y - 11, 3, 22);
+  } else {
+    // Astrolabe: a brass ring with cross spokes and a hub.
+    ctx.strokeStyle = '#e8b93e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y);
+    ctx.lineTo(x + 12, y);
+    ctx.moveTo(x, y - 12);
+    ctx.lineTo(x, y + 12);
+    ctx.stroke();
+    ctx.fillStyle = '#e8b93e';
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function drawObjectives(ctx, game) {
-  // The Sunken Bell on its pedestal, glowing gold — the objective has to
-  // shout from the cover: a big bell, a gold floor ring and its name, so a
-  // judge shrinking the frame still sees what the game is about.
-  const bell = bellSpot;
+  // This heist's treasure on its pedestal, glowing gold — the objective
+  // has to shout from the cover: a big icon, a gold floor ring and its
+  // name, so a judge shrinking the frame still sees what the game is about.
+  const target = game.mission.targetSpot;
   ctx.fillStyle = '#6b5f45';
-  ctx.fillRect(bell.x - 17, bell.y - 12, 34, 24);
-  if (!game.player.hasBell) {
+  ctx.fillRect(target.x - 17, target.y - 12, 34, 24);
+  if (!game.player.hasTarget) {
     ctx.strokeStyle = 'rgba(232, 185, 62, 0.75)';
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 5]);
     ctx.beginPath();
-    ctx.arc(bell.x, bell.y - 4, 40, 0, Math.PI * 2);
+    ctx.arc(target.x, target.y - 4, 40, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-    const g = ctx.createRadialGradient(bell.x, bell.y - 4, 2, bell.x, bell.y - 4, 44);
+    const g = ctx.createRadialGradient(target.x, target.y - 4, 2, target.x, target.y - 4, 44);
     g.addColorStop(0, 'rgba(255, 215, 120, 1)');
     g.addColorStop(1, 'rgba(255, 215, 120, 0)');
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(bell.x, bell.y - 4, 44, 0, Math.PI * 2);
+    ctx.arc(target.x, target.y - 4, 44, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#e8b93e';
-    ctx.beginPath();
-    ctx.arc(bell.x, bell.y - 4, 13, Math.PI, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillRect(bell.x - 15, bell.y - 4, 30, 4);
+    drawTreasureIcon(ctx, game.mission.targetKey, target.x, target.y - 4);
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(8, 10, 18, 0.85)';
-    ctx.strokeText('THE SUNKEN BELL', bell.x - 40, bell.y - 50);
+    ctx.strokeText(game.mission.targetLabel, target.x, target.y - 50);
     ctx.fillStyle = '#ffd76a';
-    ctx.fillText('THE SUNKEN BELL', bell.x - 40, bell.y - 50);
+    ctx.fillText(game.mission.targetLabel, target.x, target.y - 50);
   }
-  // The Tide Vault in the south gallery: a second pedestal with a golden idol.
-  const vault = vaultSpot;
-  ctx.fillStyle = '#6b5f45';
-  ctx.fillRect(vault.x - 17, vault.y - 12, 34, 24);
-  if (!game.player.hasVault) {
-    ctx.strokeStyle = 'rgba(232, 185, 62, 0.6)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    ctx.arc(vault.x, vault.y - 4, 32, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    const vg = ctx.createRadialGradient(vault.x, vault.y - 4, 2, vault.x, vault.y - 4, 36);
-    vg.addColorStop(0, 'rgba(255, 215, 120, 0.95)');
-    vg.addColorStop(1, 'rgba(255, 215, 120, 0)');
-    ctx.fillStyle = vg;
-    ctx.beginPath();
-    ctx.arc(vault.x, vault.y - 4, 36, 0, Math.PI * 2);
-    ctx.fill();
-    // A small golden idol: head, body, base.
-    ctx.fillStyle = '#e8b93e';
-    ctx.beginPath();
-    ctx.arc(vault.x, vault.y - 12, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(vault.x - 6, vault.y - 7, 12, 11);
-    ctx.fillRect(vault.x - 8, vault.y + 4, 16, 4);
-    ctx.font = 'bold 10px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(8, 10, 18, 0.85)';
-    ctx.strokeText('TIDE VAULT', vault.x, vault.y - 40);
-    ctx.fillStyle = '#ffd76a';
-    ctx.fillText('TIDE VAULT', vault.x, vault.y - 40);
+  // The Tide Vault in the south gallery: a second pedestal with a golden
+  // idol — the Grand Haul's second prize, optional loot on other heists.
+  // (When the Idol IS the heist's target, the pedestal above already is it.)
+  if (game.mission.targetKey !== 'vault') {
+    const vault = vaultSpot;
+    ctx.fillStyle = '#6b5f45';
+    ctx.fillRect(vault.x - 17, vault.y - 12, 34, 24);
+    if (!game.player.hasVault) {
+      ctx.strokeStyle = 'rgba(232, 185, 62, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(vault.x, vault.y - 4, 32, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const vg = ctx.createRadialGradient(vault.x, vault.y - 4, 2, vault.x, vault.y - 4, 36);
+      vg.addColorStop(0, 'rgba(255, 215, 120, 0.95)');
+      vg.addColorStop(1, 'rgba(255, 215, 120, 0)');
+      ctx.fillStyle = vg;
+      ctx.beginPath();
+      ctx.arc(vault.x, vault.y - 4, 36, 0, Math.PI * 2);
+      ctx.fill();
+      // A small golden idol: head, body, base.
+      ctx.fillStyle = '#e8b93e';
+      ctx.beginPath();
+      ctx.arc(vault.x, vault.y - 12, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(vault.x - 6, vault.y - 7, 12, 11);
+      ctx.fillRect(vault.x - 8, vault.y + 4, 16, 4);
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(8, 10, 18, 0.85)';
+      ctx.strokeText('TIDE VAULT', vault.x, vault.y - 40);
+      ctx.fillStyle = '#ffd76a';
+      ctx.fillText('TIDE VAULT', vault.x, vault.y - 40);
+    }
   }
   // The east exit: a green door in the outer wall, glowing once the Bell
   // is stolen so the escape route reads from across the museum.

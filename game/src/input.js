@@ -13,6 +13,7 @@ export class Input {
     this.clicked = null; // {x, y} in canvas pixels, consumed once per frame
     this.clickedRight = null; // right-click: throw a coin lure instead
     this.coinKey = false; // X pressed: throw a coin lure at the mouse
+    this.smokeKey = false; // Q pressed: throw a smoke veil at the mouse
     this.anyKey = null; // last key pressed, for menu shortcuts
     this._keys = new Set();
 
@@ -23,6 +24,7 @@ export class Input {
       this._keys.add(e.code);
       this.anyKey = e.code;
       if (e.code === 'KeyX') this.coinKey = true;
+      if (e.code === 'KeyQ') this.smokeKey = true;
       this.refresh();
     });
     window.addEventListener('keyup', (e) => {
@@ -76,6 +78,12 @@ export class Input {
   takeCoinKey() {
     const k = this.coinKey;
     this.coinKey = false;
+    return k;
+  }
+
+  takeSmokeKey() {
+    const k = this.smokeKey;
+    this.smokeKey = false;
     return k;
   }
 

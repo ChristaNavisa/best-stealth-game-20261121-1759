@@ -1,6 +1,7 @@
-// main.ts — hands "The Merrow Museum" in: copies game/ and screenshots/
-// into the output directory and writes the dossier buildDossier derives
-// from them. Node 22 standard library only; runs twice, byte-identical.
+// main.ts — hands "Bellwether — Five Heists by Lamplight" in: copies game/
+// and screenshots/ into the output directory and writes the dossier
+// buildDossier derives from them. Node 22 standard library only; runs
+// twice, byte-identical.
 
 import { buildDossier } from './vendor/makefun-game.ts';
 import {

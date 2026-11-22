@@ -29,8 +29,8 @@ export class Guard {
     this.radius = 12;
   }
 
-  update(dt, player, noises, events) {
-    const sees = inVisionCone(this, player.x, player.y);
+  update(dt, player, noises, events, smoke) {
+    const sees = inVisionCone(this, player.x, player.y, smoke);
     if (sees) {
       this.suspicion += detectionRate(this, player) * dt;
       this.lastSeen = { x: player.x, y: player.y };
@@ -145,37 +145,51 @@ export class Guard {
 }
 
 // The six guards of the Merrow Museum, each with its own loop and temper.
-export function makeGuards() {
-  return [
-    new Guard({
-      name: 'Marlow',
-      route: [[9, 4], [20, 4], [20, 6], [9, 6]],
-      speed: 1.6, pause: 2.0,
-    }),
-    new Guard({
-      name: 'Ivo',
-      route: [[9, 1], [21, 1]],
-      speed: 1.3, pause: 2.5,
-    }),
-    new Guard({
-      name: 'Pell',
-      route: [[10, 8], [20, 8], [20, 12], [10, 12]],
-      speed: 1.1, pause: 3.0,
-    }),
-    new Guard({
-      name: 'Sable',
-      route: [[11, 10], [19, 10]],
-      speed: 1.5, pause: 1.5,
-    }),
-    new Guard({
-      name: 'Bram',
-      route: [[9, 16], [21, 16], [21, 18], [9, 18]],
-      speed: 1.4, pause: 2.0,
-    }),
-    new Guard({
-      name: 'Odo',
-      route: [[24, 3], [27, 3], [27, 17], [24, 17]],
-      speed: 2.0, pause: 1.0,
-    }),
-  ];
+// A heist may field a subset, or move a guard to a new route for its job:
+// makeGuards takes [{name, route?, speed?, pause?}] and fills the rest
+// from these defaults.
+export const DEFAULT_GUARD_DEFS = [
+  {
+    name: 'Marlow',
+    route: [[9, 4], [20, 4], [20, 6], [9, 6]],
+    speed: 1.6, pause: 2.0,
+  },
+  {
+    name: 'Ivo',
+    route: [[9, 1], [21, 1]],
+    speed: 1.3, pause: 2.5,
+  },
+  {
+    name: 'Pell',
+    route: [[10, 8], [20, 8], [20, 12], [10, 12]],
+    speed: 1.1, pause: 3.0,
+  },
+  {
+    name: 'Sable',
+    route: [[11, 10], [19, 10]],
+    speed: 1.5, pause: 1.5,
+  },
+  {
+    name: 'Bram',
+    route: [[9, 16], [21, 16], [21, 18], [9, 18]],
+    speed: 1.4, pause: 2.0,
+  },
+  {
+    name: 'Odo',
+    route: [[24, 3], [27, 3], [27, 17], [24, 17]],
+    speed: 2.0, pause: 1.0,
+  },
+];
+
+export function makeGuards(defs) {
+  const list = defs ?? DEFAULT_GUARD_DEFS.map((d) => ({ name: d.name }));
+  return list.map((d) => {
+    const base = DEFAULT_GUARD_DEFS.find((b) => b.name === d.name);
+    return new Guard({
+      name: d.name,
+      route: d.route ?? base.route,
+      speed: d.speed ?? base.speed,
+      pause: d.pause ?? base.pause,
+    });
+  });
 }

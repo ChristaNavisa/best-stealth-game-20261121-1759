@@ -73,6 +73,12 @@ export const tileCenter = (tx, ty) => ({ x: (tx + 0.5) * TILE, y: (ty + 0.5) * T
 export const playerStart = tileCenter(2, 10);
 export const bellSpot = tileCenter(15, 10);
 export const exitSpot = tileCenter(28, 10);
+// The Gilded Manuscript (Heist III): a gold-leafed scroll in the north
+// gallery, on its own lectern — no coin sits on this tile.
+export const manuscriptSpot = tileCenter(12, 2);
+// The Brass Astrolabe (Heist IV): a navigator's instrument in the east
+// wing's north corner, far from the exit it tempts you toward.
+export const astrolabeSpot = tileCenter(26, 5);
 // The Tide Vault: a second, optional treasure in the south gallery —
 // a golden idol on its own pedestal, worth the detour.
 export const vaultSpot = tileCenter(15, 16);

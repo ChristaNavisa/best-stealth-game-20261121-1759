@@ -29,14 +29,14 @@ export class Camera {
   // The sweep is a pure function of elapsed time, so two runs of the game
   // at the same fixed step show the same cone — the screenshots stay
   // reproducible.
-  update(dt, elapsed, player, events) {
+  update(dt, elapsed, player, events, smoke) {
     this.angle = this.baseAngle + Math.sin(elapsed * this.speed + this.phase) * this.sweep;
     if (this.cooldown > 0) {
       this.cooldown -= dt;
       this.suspicion = 0;
       return;
     }
-    if (this.sees(player.x, player.y)) {
+    if (this.sees(player.x, player.y, smoke)) {
       const dist = Math.hypot(player.x - this.x, player.y - this.y);
       const closeness = 1 - dist / (CAM_RANGE + 30);
       this.suspicion += (26 + 44 * Math.max(0, closeness)) * dt;
@@ -52,12 +52,13 @@ export class Camera {
 
   // Same geometry as a guard's cone, from a fixed mount. The sight ray
   // starts a step out from the wall the camera is mounted on, so the
-  // mount's own tile never blocks its view.
-  sees(px, py) {
+  // mount's own tile never blocks its view. Smoke blinds a camera too.
+  sees(px, py, smoke) {
     const dx = px - this.x;
     const dy = py - this.y;
     const dist = Math.hypot(dx, dy);
     if (dist > CAM_RANGE || dist < 1) return dist < 1;
+    if (smoke && (smoke.covers(px, py) || smoke.blocks(this.x, this.y, px, py))) return false;
     const ang = Math.atan2(dy, dx);
     let diff = ang - this.angle;
     while (diff > Math.PI) diff -= Math.PI * 2;
@@ -71,20 +72,25 @@ export class Camera {
 
 // Three cameras, one per wing, each sweeping the gallery it watches:
 // the central gallery from the north wall, the east wing from the divider,
-// the south gallery from its north wall.
-export function makeCameras() {
-  return [
-    new Camera({
-      name: 'Cam A', tx: 13, ty: 7, angle: Math.PI / 2,
-      sweep: 0.7, phase: 0, speed: 0.55,
-    }),
-    new Camera({
-      name: 'Cam B', tx: 23, ty: 9, angle: 0,
-      sweep: 0.6, phase: 1.4, speed: 0.7,
-    }),
-    new Camera({
-      name: 'Cam C', tx: 10, ty: 14, angle: Math.PI / 2,
-      sweep: 0.7, phase: 2.6, speed: 0.55,
-    }),
-  ];
+// the south gallery from its north wall. A heist may field a subset.
+const DEFAULT_CAMERA_DEFS = [
+  {
+    name: 'Cam A', tx: 13, ty: 7, angle: Math.PI / 2,
+    sweep: 0.7, phase: 0, speed: 0.55,
+  },
+  {
+    name: 'Cam B', tx: 23, ty: 9, angle: 0,
+    sweep: 0.6, phase: 1.4, speed: 0.7,
+  },
+  {
+    name: 'Cam C', tx: 10, ty: 14, angle: Math.PI / 2,
+    sweep: 0.7, phase: 2.6, speed: 0.55,
+  },
+];
+
+export function makeCameras(names) {
+  const defs = names
+    ? DEFAULT_CAMERA_DEFS.filter((d) => names.includes(d.name))
+    : DEFAULT_CAMERA_DEFS;
+  return defs.map((d) => new Camera(d));
 }

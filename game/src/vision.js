@@ -7,11 +7,14 @@ export const CONE_RANGE = 175;
 export const CONE_HALF_ANGLE = 0.62; // ~35 degrees each side
 
 // Is the point (px, py) inside the guard's vision cone with a clear sight line?
-export function inVisionCone(guard, px, py) {
+// Smoke blinds: a guard cannot see a burglar standing in a veil, nor
+// through a veil lying between them.
+export function inVisionCone(guard, px, py, smoke) {
   const dx = px - guard.x;
   const dy = py - guard.y;
   const dist = Math.hypot(dx, dy);
   if (dist > CONE_RANGE || dist < 1) return dist < 1;
+  if (smoke && (smoke.covers(px, py) || smoke.blocks(guard.x, guard.y, px, py))) return false;
   const ang = Math.atan2(dy, dx);
   let diff = ang - guard.angle;
   while (diff > Math.PI) diff -= Math.PI * 2;
