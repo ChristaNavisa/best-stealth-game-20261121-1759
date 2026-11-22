@@ -8,7 +8,8 @@
 
 import { TILE, COLS, ROWS, playerStart } from './level.js';
 import { MISSIONS, missionById } from './missions.js';
-import { SmokeField } from './gadgets.js';
+import { SmokeField, DashTrail } from './gadgets.js';
+import { darknessAt } from './raycast.js';
 import { Player } from './player.js';
 import { makeGuards } from './guards.js';
 import { makeWarden } from './warden.js';
@@ -64,6 +65,8 @@ class Game {
     this.cameras = makeCameras(mission.cameras);
     this.lasers = makeLasers(mission.lasers);
     this.smoke = new SmokeField();
+    this.dashTrail = new DashTrail();
+    this._hbTimer = 0; // heartbeat throttle while a guard nearly sees you
     this.elapsed = 0;
     this.everAlerted = false;
     this.spotted = 0;
@@ -86,18 +89,22 @@ class Game {
       const badge = best ? ` · <b style="color:#ffd76a">${best}</b>` : '';
       return `<button data-mission="${m.id}" style="display:block;width:100%;text-align:left;background:#141a26;border:1px solid #39415a;color:#e8e6df;border-radius:8px;padding:10px 14px;margin:7px 0;cursor:pointer;font-family:Georgia,serif;font-size:15px">
         <b style="color:#e8b93e">Heist ${m.num} — ${m.name}</b>${badge}<br>
-        <span style="font-size:13px;color:#b9c0cf">${guards} guards${warden} · ${cams} cameras · ${lasers} lasers · 2 smoke veils · ${m.hint}</span>
+        <span style="font-size:13px;color:#b9c0cf">${guards} guards${warden} · ${cams} cameras · ${lasers} lasers · 2 smoke veils · 2 shadow dashes · ${m.hint}</span>
       </button>`;
     }).join('');
     this.showOverlay(
-      `<h1>Bellwether</h1><p>Five heists by lamplight. One museum, five nights — ` +
+      `<h1>Lantern Archive</h1><p>Five heists by lamplight. One museum, five nights — ` +
       `steal a different treasure from a different wing each time, then reach ` +
-      `the green EXIT unseen. On three nights the <b>Night Warden</b> walks ` +
+      `the green EXIT unseen. The lamps throw real shadows now: walls and crates ` +
+      `cut the light, and a burglar in hard shadow is seen from much closer — ` +
+      `while the old cedar boards groan underfoot and give you away. ` +
+      `On three nights the <b>Night Warden</b> walks ` +
       `with a lantern: his light spots you faster, his cone reaches farther, ` +
       `and his whistle calls every guard at once. Finish a heist without ever being spotted for a ` +
       `<b>GHOST</b> rating.</p>${cards}` +
       `<p class="keys"><b>WASD / arrows</b> move · <b>Shift</b> run (fast, loud) · ` +
-      `<b>C</b> sneak (slow, silent) · <b>Click</b> throw a pebble · ` +
+      `<b>C</b> sneak (slow, silent) · <b>E</b> shadow dash (silent burst, 2 per heist) · ` +
+      `<b>Click</b> throw a pebble · ` +
       `<b>Q</b> throw a smoke veil · <b>X / right-click</b> toss a brass coin lure · ` +
       `<b>P</b> pause · <b>R</b> restart</p>` +
       `<p class="keys">Click a heist, or press 1–5, to begin.</p>`,
@@ -209,7 +216,22 @@ class Game {
     if (this.input.takeSmokeKey() && this.player.smokes > 0) {
       this.player.throwSmoke(this.input.mouseX, this.input.mouseY, events);
     }
+    if (this.input.takeDashKey() && this.player.startDash()) {
+      events.push({ type: 'dash', x: this.player.x, y: this.player.y });
+    }
     this.player.update(dt, this.input, events);
+    if (this.player.dashT > 0 && this.player.moving) {
+      this.dashTrail.add(this.player.x, this.player.y, this.player.angle);
+    }
+    this.dashTrail.update(dt);
+    // Heartbeat: a guard is suspicious and close, but has not caught you
+    // yet — the near-miss the detection system is built for.
+    const worst = Math.max(0, ...this.guards.map((g) => g.suspicion), this.warden ? this.warden.suspicion : 0);
+    this._hbTimer -= dt;
+    if (worst >= 30 && worst < 100 && this._hbTimer <= 0) {
+      this._hbTimer = 0.75;
+      this.sounds.heartbeat();
+    }
     for (const laser of this.lasers) {
       laser.update(dt, this.elapsed, this.player, events);
     }
@@ -267,6 +289,17 @@ class Game {
         this.sounds.smoke();
         this.smoke.throwAt(e.x, e.y);
         this.pulses.push({ x: e.x, y: e.y, r: 8, alpha: 0.85, color: 'rgba(226, 232, 240, 0.9)' });
+      }
+      if (e.type === 'dash') {
+        // A shadow dash: a silent burst across the floor, teal trail behind.
+        this.sounds.dash();
+        this.pulses.push({ x: e.x, y: e.y, r: 6, alpha: 0.6, color: 'rgba(45, 212, 191, 0.8)' });
+      }
+      if (e.type === 'creak') {
+        // A cedar board groaning: the step is heard farther than a
+        // normal one, and the amber ring shows how far the groan carries.
+        this.sounds.creak();
+        this.pulses.push({ x: e.x, y: e.y, r: 6, alpha: 0.7, color: 'rgba(245, 165, 36, 0.85)' });
       }
       if (e.type === 'laser') {
         // A tripwire crossed while it burned: every guard grows

@@ -14,6 +14,7 @@ export class Input {
     this.clickedRight = null; // right-click: throw a coin lure instead
     this.coinKey = false; // X pressed: throw a coin lure at the mouse
     this.smokeKey = false; // Q pressed: throw a smoke veil at the mouse
+    this.dashKey = false; // E pressed: shadow dash, a silent burst forward
     this.anyKey = null; // last key pressed, for menu shortcuts
     this._keys = new Set();
 
@@ -25,6 +26,7 @@ export class Input {
       this.anyKey = e.code;
       if (e.code === 'KeyX') this.coinKey = true;
       if (e.code === 'KeyQ') this.smokeKey = true;
+      if (e.code === 'KeyE') this.dashKey = true;
       this.refresh();
     });
     window.addEventListener('keyup', (e) => {
@@ -84,6 +86,12 @@ export class Input {
   takeSmokeKey() {
     const k = this.smokeKey;
     this.smokeKey = false;
+    return k;
+  }
+
+  takeDashKey() {
+    const k = this.dashKey;
+    this.dashKey = false;
     return k;
   }
 

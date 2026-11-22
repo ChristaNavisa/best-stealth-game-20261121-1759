@@ -1,11 +1,14 @@
 // player.js — Wren, the burglar: walk, sneak, run, throw pebbles, and grab
 // the Sunken Bell. Running is fast but loud; sneaking is slow and quiet.
 
-import { TILE, circleHitsSolid, bellSpot, vaultSpot, exitSpot, coins } from './level.js';
+import { TILE, circleHitsSolid, bellSpot, vaultSpot, exitSpot, coins, isCreakyAt } from './level.js';
 
 const WALK_SPEED = 2.6 * TILE;
 const SNEAK_SPEED = 1.5 * TILE;
 const RUN_SPEED = 4.1 * TILE;
+const DASH_SPEED = 8.6 * TILE; // shadow dash: more than twice a run, silent
+const DASH_TIME = 0.45; // seconds of burst per dash
+const DASH_COOLDOWN = 6; // seconds before the next dash
 
 export class Player {
   constructor(start) {
@@ -24,6 +27,9 @@ export class Player {
     this.pebbles = 5;
     this.smokes = 2; // smoke veils: thrown with Q, they blind guards and cameras
     this.lures = 3; // brass coins to throw: they clatter and pull guards over
+    this.dashes = 2; // shadow dashes: silent bursts forward, E, 2 per heist
+    this.dashT = 0; // seconds left of the current burst
+    this.dashCd = 0; // seconds until the next dash is ready
     this.stepTimer = 0;
     this.moving = false;
     this._coinsLeft = coins.map((c) => ({ ...c, taken: false }));
@@ -33,10 +39,14 @@ export class Player {
     const ix = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     const iy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
     this.moving = ix !== 0 || iy !== 0;
+    if (this.dashT > 0) this.dashT = Math.max(0, this.dashT - dt);
+    if (this.dashCd > 0) this.dashCd = Math.max(0, this.dashCd - dt);
     this.stance = input.sneak ? 'sneak' : input.run ? 'run' : 'walk';
     if (this.moving) {
       const len = Math.hypot(ix, iy);
-      const speed = this.stance === 'sneak' ? SNEAK_SPEED : this.stance === 'run' ? RUN_SPEED : WALK_SPEED;
+      // A dash bursts forward at more than twice running speed — and
+      // makes no noise at all: the one way to cross a lit gallery fast.
+      const speed = this.dashT > 0 ? DASH_SPEED : this.stance === 'sneak' ? SNEAK_SPEED : this.stance === 'run' ? RUN_SPEED : WALK_SPEED;
       this.angle = Math.atan2(iy, ix);
       const nx = this.x + (ix / len) * speed * dt;
       const ny = this.y + (iy / len) * speed * dt;
@@ -48,18 +58,39 @@ export class Player {
     this.pickups(events);
   }
 
+  // The shadow dash: a silent burst forward. Two per heist, six seconds
+  // between bursts. Returns false with none left or still cooling down.
+  startDash() {
+    if (this.dashes <= 0 || this.dashCd > 0 || this.dashT > 0) return false;
+    this.dashes -= 1;
+    this.dashT = DASH_TIME;
+    this.dashCd = DASH_COOLDOWN;
+    return true;
+  }
+
   // Footstep noise: a pulse the guards can hear. Run loud, walk soft, sneak silent.
+  // A dash is silent. Creaky cedar boards groan: running across them is
+  // heard much farther, and even walking creaks — the board's groan is
+  // its own event, so the sound and the ring both read.
   step(dt, events) {
     this.stepTimer -= dt;
     if (this.stepTimer > 0) return;
+    if (this.dashT > 0) {
+      this.stepTimer = 0.1;
+      events.push({ type: 'playerStep', x: this.x, y: this.y, quiet: true });
+      return;
+    }
+    const creak = isCreakyAt(this.x, this.y);
     if (this.stance === 'run') {
       this.stepTimer = 0.42;
-      events.push({ type: 'noise', x: this.x, y: this.y, radius: 130, loud: true });
+      events.push({ type: 'noise', x: this.x, y: this.y, radius: creak ? 190 : 130, loud: true });
       events.push({ type: 'playerStep', x: this.x, y: this.y });
+      if (creak) events.push({ type: 'creak', x: this.x, y: this.y });
     } else if (this.stance === 'walk') {
       this.stepTimer = 0.55;
-      events.push({ type: 'noise', x: this.x, y: this.y, radius: 45, loud: false });
+      events.push({ type: 'noise', x: this.x, y: this.y, radius: creak ? 90 : 45, loud: false });
       events.push({ type: 'playerStep', x: this.x, y: this.y });
+      if (creak) events.push({ type: 'creak', x: this.x, y: this.y });
     } else {
       this.stepTimer = 0.6;
       events.push({ type: 'playerStep', x: this.x, y: this.y, quiet: true });

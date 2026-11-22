@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Bellwether — Five Heists by Lamplight: the Night Warden, lantern &amp; whistle, 7 guards, smoke veils</title>
+<title>Lantern Archive — Five Heists by Lamplight: raycast lantern shadows, shadow dash, creaky boards</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <style>
@@ -38,7 +38,7 @@
 </head>
 <body>
 <div id="wrap">
-  <h1 class="title">Bellwether <span>— Five Heists by Lamplight · the Night Warden · 7 guards · smoke veils · coin lures</span></h1>
+  <h1 class="title">Lantern Archive <span>— Five Heists by Lamplight · raycast lantern shadows · shadow dash · creaky boards</span></h1>
   <div id="bar">
     <span id="objective">Five heists by lamplight — pick a job, steal its treasure, escape unseen.</span>
     <div id="meter"><div id="meter-fill"></div></div>
@@ -50,12 +50,14 @@
     <canvas id="game" width="960" height="640"></canvas>
     <canvas id="minimap" width="180" height="120"></canvas>
     <div id="overlay">
-      <h1>Bellwether</h1>
+      <h1>Lantern Archive</h1>
       <p>Five heists by lamplight. One museum, five nights — steal a different
       treasure from a different wing each time, then reach the green EXIT unseen.
+      The lamps throw real shadows: hide in them and a guard's cone shrinks.
       Finish a heist without ever being spotted for a <b>GHOST</b> rating.</p>
       <p class="keys"><b>WASD / arrows</b> move &nbsp;·&nbsp; <b>Shift</b> run (fast, loud) &nbsp;·&nbsp;
-      <b>C</b> sneak (slow, silent) &nbsp;·&nbsp; <b>Click</b> throw a pebble to lure a guard &nbsp;·&nbsp;
+      <b>C</b> sneak (slow, silent) &nbsp;·&nbsp; <b>E</b> shadow dash (silent burst, 2 per heist) &nbsp;·&nbsp;
+      <b>Click</b> throw a pebble to lure a guard &nbsp;·&nbsp;
       <b>Q</b> throw a smoke veil &nbsp;·&nbsp;
       <b>X / right-click</b> toss a brass coin lure &nbsp;·&nbsp;
       <b>P</b> pause &nbsp;·&nbsp; <b>R</b> restart</p>
@@ -64,7 +66,13 @@
   </div>
   <div id="help">
     <b>How to stay unseen:</b> guards see you inside their yellow cones — faster in lamplight,
-    slower while you sneak or hide in the potted plants. A guard who half-sees you grows
+    slower while you sneak or hide in the potted plants. The lamps throw real shadows now:
+    walls and crates cut the light, and a burglar in hard shadow is seen from much closer
+    (the meter says IN SHADOW). The old cedar boards in the central hall and south gallery
+    groan underfoot — running across them is heard far away, so sneak or dash over them.
+    A <b>shadow dash</b> (<b>E</b>, 2 per heist) bursts you forward in silence, and when a
+    guard nearly spots you your heart thuds — break sight before it does.
+    A guard who half-sees you grows
     <b>suspicious</b> and comes to look; one who sees you clearly gives chase. Break sight,
     hide, and the alarm fades — the alarm level (0–3) on the meter shows how hot you are.
     Running is loud: guards hear it and come to investigate.

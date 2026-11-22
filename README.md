@@ -1,4 +1,4 @@
-# Bellwether — Five Heists by Lamplight: the Night Warden, lantern & whistle, 7 guards, smoke veils, coin lures & ghost ratings
+# Lantern Archive — Five Heists by Lamplight: raycast lantern shadows, shadow dash, creaky boards & ghost ratings
 
 [![Make the best stealth game](https://make.fun/badge/best-stealth-game-20261121-1759.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)
 [![Rank](https://make.fun/badge/best-stealth-game-20261121-1759/ChristaNavisa/best-stealth-game-20261121-1759/rank.svg)](https://make.fun/bounty/best-stealth-game-20261121-1759)

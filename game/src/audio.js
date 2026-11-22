@@ -33,6 +33,24 @@ export class SoundBank {
     osc.stop(t0 + dur + 0.05);
   }
 
+  // A cedar board groaning underfoot: a low wooden creak, louder than a step.
+  creak() {
+    this._tone(150, 0.22, 'sawtooth', 0.05, 0, 85);
+    this._tone(95, 0.18, 'triangle', 0.04, 0.04, 70);
+  }
+
+  // A heartbeat when a guard nearly spots you: two low thumps, lub-dub.
+  heartbeat() {
+    this._tone(58, 0.12, 'sine', 0.14);
+    this._tone(52, 0.14, 'sine', 0.11, 0.16);
+  }
+
+  // The shadow dash: a quick silent whoosh as Wren bursts forward.
+  dash() {
+    this._tone(620, 0.18, 'sine', 0.06, 0, 170);
+    this._tone(340, 0.14, 'triangle', 0.04, 0.03, 140);
+  }
+
   // A soft shoe tap. Guards step lower and duller than the player.
   step(isGuard, loud) {
     this._tone(isGuard ? 110 : 190, 0.07, 'triangle', loud ? 0.10 : 0.05);

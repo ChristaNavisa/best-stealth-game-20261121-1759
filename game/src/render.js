@@ -4,8 +4,9 @@
 
 import {
   TILE, COLS, ROWS, grid, T_WALL, T_CRATE, T_CASE,
-  lamps, plants, vaultSpot, exitSpot,
+  lamps, plants, vaultSpot, exitSpot, isCreakyAt,
 } from './level.js';
+import { castLampPolygon, tracePolygon } from './raycast.js';
 import { CONE_RANGE, CONE_HALF_ANGLE } from './vision.js';
 import { CAM_RANGE, CAM_HALF_ANGLE } from './cameras.js';
 import { WARDEN_RANGE, WARDEN_HALF_ANGLE, LANTERN_RADIUS } from './warden.js';
@@ -25,6 +26,8 @@ export function drawWorld(ctx, game) {
   // Smoke veils last, over the guards and cones: a veil should look like
   // it hides what is inside it.
   if (game.smoke) game.smoke.draw(ctx);
+  // A shadow dash leaves its teal ghost-trail over the floor.
+  if (game.dashTrail) game.dashTrail.draw(ctx);
   drawPulses(ctx, game);
   if (game.lockdownT > 0) drawLockdownFrame(ctx, game);
 }
@@ -48,6 +51,21 @@ function drawFloor(ctx) {
       if (t === T_WALL) continue;
       ctx.fillStyle = (tx + ty) % 2 === 0 ? FLOOR_A : FLOOR_B;
       ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+    }
+  }
+  // Creaky cedar boards: darker planks with visible seams, so the noisy
+  // ground reads before a foot lands on it.
+  ctx.fillStyle = 'rgba(20, 16, 8, 0.35)';
+  ctx.strokeStyle = 'rgba(12, 9, 4, 0.6)';
+  ctx.lineWidth = 1;
+  for (let ty = 0; ty < ROWS; ty++) {
+    for (let tx = 0; tx < COLS; tx++) {
+      if (!isCreakyAt((tx + 0.5) * TILE, (ty + 0.5) * TILE)) continue;
+      ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+      ctx.beginPath();
+      ctx.moveTo(tx * TILE, ty * TILE + TILE / 2);
+      ctx.lineTo((tx + 1) * TILE, ty * TILE + TILE / 2);
+      ctx.stroke();
     }
   }
   // Gallery names, on a dark plaque so they read at a glance even where
@@ -390,13 +408,16 @@ function drawLighting(ctx, game) {
   lctx.fillStyle = 'rgba(6, 8, 20, 0.20)';
   lctx.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
   lctx.globalCompositeOperation = 'destination-out';
+  // Raycast lantern shadows: each lamp's hole is its visibility polygon,
+  // not a circle — walls, crates and cases cut hard shadow edges into
+  // the pool, so the light on the floor is the light the guards obey.
   for (const lamp of lamps) {
+    const poly = castLampPolygon(lamp);
     const g = lctx.createRadialGradient(lamp.x, lamp.y, 6, lamp.x, lamp.y, lamp.r);
     g.addColorStop(0, 'rgba(0, 0, 0, 0.95)');
     g.addColorStop(1, 'rgba(0, 0, 0, 0)');
     lctx.fillStyle = g;
-    lctx.beginPath();
-    lctx.arc(lamp.x, lamp.y, lamp.r, 0, Math.PI * 2);
+    tracePolygon(lctx, poly);
     lctx.fill();
   }
   const p = game.player;

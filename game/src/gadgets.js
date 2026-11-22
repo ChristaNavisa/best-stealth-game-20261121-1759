@@ -1,3 +1,36 @@
+// Shadow Dash afterimages: the teal ghost-trail a dash leaves behind,
+// so the burst reads on screen and on the contact sheet — a silent
+// streak across the floor, gone in a third of a second.
+export class DashTrail {
+  constructor() {
+    this.marks = []; // {x, y, angle, ttl}
+  }
+
+  add(x, y, angle) {
+    this.marks.push({ x, y, angle, ttl: 0.35, max: 0.35 });
+    if (this.marks.length > 14) this.marks.shift();
+  }
+
+  update(dt) {
+    for (const m of this.marks) m.ttl -= dt;
+    this.marks = this.marks.filter((m) => m.ttl > 0);
+  }
+
+  draw(ctx) {
+    for (const m of this.marks) {
+      const f = m.ttl / m.max;
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.rotate(m.angle);
+      ctx.fillStyle = `rgba(45, 212, 191, ${0.5 * f})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 13, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
 // gadgets.js — the smoke veil: a thrown vial that blooms into a grey
 // cloud for six seconds. Guards and cameras cannot see through smoke, and
 // a burglar standing inside a cloud cannot be seen at all — the way to

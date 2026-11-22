@@ -1,7 +1,9 @@
-// main.ts — hands "Bellwether — Five Heists by Lamplight" in: copies game/
+// main.ts — hands "Lantern Archive — Five Heists by Lamplight" in: copies game/
 // and screenshots/ into the output directory and writes the dossier
 // buildDossier derives from them. Node 22 standard library only; runs
-// twice, byte-identical.
+// twice, byte-identical. Round 8: raycast lantern shadows, shadow dash,
+// creaky cedar boards and a heartbeat — the game itself is unchanged in
+// shape, only deeper.
 
 import { buildDossier } from './vendor/makefun-game.ts';
 import {
@@ -84,7 +86,7 @@ function handIn(): void {
   writeFileSync(join(outDir, 'dossier.json'), dossier);
   const gameCount = countFiles(join(outDir, 'game'));
   const shotCount = countFiles(join(outDir, 'screenshots'));
-  console.log(`hand-in: ${outDir} kept, game/ and screenshots/ refreshed from ${repoRoot}`);
+  console.log(`hand-in: ${outDir} kept, game/ and screenshots/ refreshed from ${repoRoot} (r8: lantern shadows, dash, creaky boards)`);
   console.log(
     `hand-in complete: ${gameCount.files} game files (${gameCount.bytes} bytes), ` +
     `${shotCount.files} screenshots, dossier.json ${dossier.length} bytes in ${outDir}`,

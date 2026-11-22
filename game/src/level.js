@@ -56,6 +56,20 @@ function makeGrid() {
 
 export const grid = makeGrid();
 
+// Creaky cedar boards: old floorboards that groan underfoot. Running
+// across them is heard much farther, and even walking creaks — the planks
+// are drawn darker with visible seams, so a careful burglar reads the
+// noisy ground before stepping on it. Two long runs: the central hall
+// and the south gallery, both routes the burglar must cross.
+export const creaky = new Set(
+  [...Array(13)].map((_, i) => `${9 + i},10`)
+    .concat([...Array(13)].map((_, i) => `${9 + i},17`)),
+);
+
+export function isCreakyAt(px, py) {
+  return creaky.has(`${Math.floor(px / TILE)},${Math.floor(py / TILE)}`);
+}
+
 // Potted plants: walkable hide spots. Standing in one hides you.
 export const plants = new Set(
   [[3, 5], [3, 14], [9, 5], [20, 5], [12, 10], [18, 10], [10, 17], [19, 15], [26, 9], [26, 12]]

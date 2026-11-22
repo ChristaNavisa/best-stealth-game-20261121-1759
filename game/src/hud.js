@@ -2,6 +2,7 @@
 // pebble count, and the minimap that shows guards, the bell and the exit.
 
 import { COLS, ROWS, TILE, grid, T_FLOOR, bellSpot, vaultSpot, exitSpot } from './level.js';
+import { darknessAt } from './raycast.js';
 
 export class Hud {
   constructor() {
@@ -35,9 +36,14 @@ export class Hud {
         : game.laserAlarmT > 0
           ? 'LASER TRIPPED — guards are searching!'
           : `Alarm ${level}/3 · ${pct}% — ${stage}`;
+    // Raycast shadow: a burglar in hard shadow is seen from much closer,
+    // so the meter says so at a glance.
+    if (darknessAt(player.x, player.y) > 0.6) {
+      this.meterLabel.textContent += ' · IN SHADOW — hard to spot';
+    }
     const t = Math.floor(game.elapsed);
     this.timer.textContent = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-    this.pebbles.textContent = `Pebbles ${player.pebbles} · Smoke ${player.smokes} · Lures ${player.lures} · Coins ${player.coins}/8`;
+    this.pebbles.textContent = `Pebbles ${player.pebbles} · Smoke ${player.smokes} · Lures ${player.lures} · Dash ${player.dashes}${player.dashCd > 0 ? ` (${Math.ceil(player.dashCd)}s)` : ''} · Coins ${player.coins}/8`;
     this.drawMinimap(game);
   }
 

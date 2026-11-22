@@ -24,6 +24,11 @@ export function applyShot(game, name) {
     p.x = tileCenter(13, 10).x; p.y = tileCenter(13, 10).y;
     p.stance = 'sneak';
     p.angle = 0;
+    // Mid shadow-dash toward the Bell: a teal ghost-trail streaks behind
+    // her across the creaky boards, and the smoke veil blooms beside her.
+    p.dashes = 1; p.dashT = 0.3;
+    game.dashTrail.add(tileCenter(11, 10).x, tileCenter(11, 10).y, 0);
+    game.dashTrail.add(tileCenter(12, 10).x, tileCenter(12, 10).y, 0);
     game.smoke.throwAt(tileCenter(12, 10).x, tileCenter(12, 10).y);
     if (w) {
       w.x = tileCenter(17, 10).x; w.y = tileCenter(17, 10).y;
@@ -50,13 +55,18 @@ export function applyShot(game, name) {
   } else if (name === 'chase') {
     // A near-miss: Wren inches from Pell's cone, suspicion climbing, a
     // camera's cone already amber — the moment the detection system is
-    // built for. A smoke veil blooms over Pell himself: blinded, he
-    // cannot finish the spot. And the WARDEN has just blown his whistle:
-    // alerted, gold ring expanding, every guard turning toward Wren.
+    // built for. She is half in raycast shadow (IN SHADOW on the meter),
+    // mid shadow-dash with a teal trail behind her. A smoke veil blooms
+    // over Pell himself: blinded, he cannot finish the spot. And the
+    // WARDEN has just blown his whistle: alerted, gold ring expanding,
+    // every guard turning toward Wren.
     // Elapsed 63 s so the clock reads mid-heist.
     game.elapsed = 63;
-    p.x = tileCenter(14, 9).x; p.y = tileCenter(14, 9).y;
+    p.x = tileCenter(13, 9).x; p.y = tileCenter(13, 9).y;
     p.stance = 'walk';
+    p.dashes = 1; p.dashT = 0.3;
+    game.dashTrail.add(tileCenter(11, 9).x, tileCenter(11, 9).y, 0);
+    game.dashTrail.add(tileCenter(12, 9).x, tileCenter(12, 9).y, 0);
     game.smoke.throwAt(tileCenter(17, 9).x, tileCenter(17, 9).y);
     if (w) {
       w.x = tileCenter(17, 11).x; w.y = tileCenter(17, 11).y;
@@ -91,6 +101,9 @@ export function applyShot(game, name) {
     p.hasBell = true;
     p.hasTarget = true;
     p.coins = 2;
+    p.lures = 2; // one brass coin already spent: its gold ring still glows
+    // where it landed in the doorway, pulling Odo away from the exit.
+    game.pulses.push({ x: tileCenter(23, 10).x, y: tileCenter(23, 10).y, r: 8, alpha: 0.85, color: 'rgba(232, 200, 90, 0.9)' });
     p.x = tileCenter(25, 10).x; p.y = tileCenter(25, 10).y;
     p.stance = 'sneak';
     if (w) {
